@@ -1,0 +1,908 @@
+options
+{
+    JDK_VERSION = "1.8";
+    IGNORE_CASE = true;
+    STATIC = false;
+}
+
+PARSER_BEGIN(ContParser)
+package org.dei.perla.context.parser;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.dei.perla.core.fpc.DataType;
+import org.dei.perla.context.*;
+import org.dei.perla.lang.parser.*;
+import org.dei.perla.lang.parser.ast.*;
+import org.dei.perla.lang.query.expression.*;
+
+public final class ContParser {
+
+        private String getPosition(Token t) {
+            return "line " + t.beginLine + ", column " + t.beginColumn;
+        }
+
+}
+
+PARSER_END(ContParser)
+
+/*
+ * SEPARATORS
+ */
+SKIP :
+{
+    " "
+    |
+    "\r"
+    |
+    "\t"
+    |
+    "\n"
+}
+
+/*
+ *	COMMENTS
+ */
+MORE:
+{
+    "/*" : COMMENT
+}
+
+<COMMENT> MORE:
+{
+    <~[]>
+}
+
+<COMMENT> SKIP:
+{
+    "*/" : DEFAULT
+}
+
+/*
+ * CREATE CONTEXT
+ */
+TOKEN :
+{
+    < KEYWORD_CREATE:   "CREATE" >
+    |
+    < KEYWORD_CONTEXT:       "CONTEXT"     >
+    |
+    < KEYWORD_DOT:       "."     >
+}
+
+/*
+ * ACTIVE IF CLAUSE
+ */
+TOKEN :
+{
+    < KEYWORD_ACTIVE:     "ACTIVE" >
+    |
+    < KEYWORD_IF:     "IF" >
+}
+
+
+/*
+ * MISC TOKENS
+ */
+TOKEN :
+{
+    < KEYWORD_IS:       "IS" >
+    |
+    < KEYWORD_BETWEEN:  "BETWEEN"  >
+    |
+    < KEYWORD_LIKE:     "LIKE"     >
+}
+
+/*
+ * ALGEBRAIC OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_MULTIPLY: "*" >
+    |
+    < OPERATOR_DIVIDE:   "/" >
+    |
+    <OPERATOR_MODULO:    "%" >
+    |
+    < OPERATOR_PLUS:     "+" >
+    |
+    < OPERATOR_MINUS:    "-" >
+}
+
+/*
+ * BOOLEAN OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_NOT:     "NOT" >
+    |
+    < OPERATOR_XOR:     "XOR" >
+    |
+    < OPERATOR_AND:     "AND" >
+    |
+    < OPERATOR_OR:      "OR"  >
+}
+
+/*
+ * BITWISE OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_BITWISE_NOT: "~" >
+    |
+    < OPERATOR_BITWISE_LSH: "<<" >
+    |
+    < OPERATOR_BITWISE_RSH: ">>" >
+    |
+    < OPERATOR_BITWISE_XOR: "^" >
+    |
+    < OPERATOR_BITWISE_AND: "&" >
+    |
+    < OPERATOR_BITWISE_OR:  "|"  >
+}
+
+/*
+ * COMPARISON OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_GREATER:       ">"  >
+    |
+    < OPERATOR_LESS:          "<"  >
+    |
+    < OPERATOR_GREATER_EQUAL: ">=" >
+    |
+    < OPERATOR_LESS_EQUAL:    "<=" >
+    |
+    < OPERATOR_EQUAL:         "="  >
+    |
+    < OPERATOR_NOT_EQUAL:     "<>" | "!=" >
+}
+
+/*
+ * DATA TYPES
+ */
+TOKEN :
+{
+    < TYPE_ID:             "ID"        >
+    |
+    < TYPE_TIMESTAMP:      "TIMESTAMP" >
+    |
+    < TYPE_BOOLEAN:        "BOOLEAN"   >
+    |
+    < TYPE_INTEGER:        "INTEGER"   >
+    |
+    < TYPE_FLOAT:          "FLOAT"     >
+    |
+    < TYPE_STRING:         "STRING"    >
+}
+
+/*
+ * TYPE CLASS WILDCARDS
+ */
+TOKEN :
+{
+    < TYPE_ANY: "ANY" >
+}
+
+/*
+ * COSTANTS
+ * Don't use these tokens, use the corresponding productions instead.
+ */
+
+/*
+ * CONSTANT NULL
+ */
+TOKEN :
+{
+    < CONSTANT_NULL:     "NULL" >
+}
+
+/*
+ * 3-VALUE BOOLEAN LOGIC (true, false, unknown)
+ */
+TOKEN :
+{
+    < CONSTANT_BOOLEAN_TRUE:    "TRUE"    >
+    |
+    < CONSTANT_BOOLEAN_FALSE:   "FALSE"   >
+    |
+    < CONSTANT_BOOLEAN_UNKNOWN: "UNKNOWN" >
+}
+
+/*
+ * NUMERIC CONSTANTS (float and integer)
+ */
+TOKEN :
+{
+    <CONSTANT_INTEGER_10: ( <DIGIT> )+ >
+    |
+    <CONSTANT_INTEGER_16: ( <HEXADECIMAL> ) >
+    |
+    <CONSTANT_FLOAT:
+        ( <CONSTANT_INTEGER_10> )? "." <CONSTANT_INTEGER_10>
+    >
+}
+
+/*
+ * STRING CONSTANTS
+ * Strings can be single quoted or double quoted. The quote character is
+ * escaped when doubled (e.g., 'test '' string' or "test "" string"
+ */
+TOKEN :
+{
+    < CONSTANT_SINGLE_QUOTED_STRING_START: "'"  > : NON_SINGLE_QUOTED_STRING
+    |
+    < CONSTANT_DOUBLE_QUOTED_STRING_START: "\"" > : NON_DOUBLE_QUOTED_STRING
+}
+
+<NON_SINGLE_QUOTED_STRING> TOKEN :
+{
+    < CONSTANT_SINGLE_QUOTED_STRING_VALUE: (~["'"] | "'" "'")* > : NON_SINGLE_QUOTED_STRING_END
+}
+
+<NON_DOUBLE_QUOTED_STRING> TOKEN :
+{
+    < CONSTANT_DOUBLE_QUOTED_STRING_VALUE: (~["\""] | "\"" "\"")* > : NON_DOUBLE_QUOTED_STRING_END
+}
+
+<NON_SINGLE_QUOTED_STRING_END> TOKEN :
+{
+    < CONSTANT_SINGLE_QUOTED_STRING_END:  "'" > : DEFAULT
+}
+
+<NON_DOUBLE_QUOTED_STRING_END> TOKEN :
+{
+    < CONSTANT_DOUBLE_QUOTED_STRING_END: "\"" > : DEFAULT
+}
+
+/*
+ * IDENTIFIERS
+ */
+TOKEN :
+{
+    < #DIGIT:      ["0" - "9"]               >
+    |
+    < #LITERAL:    ["a" - "z", "A" - "Z"] >
+    |
+    < #UNDERSCORE: "_"                       >
+    |
+    < #HEXADECIMAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+    |
+    < IDENTIFIER: ( <LITERAL> | <UNDERSCORE>) ( <DIGIT> | <LITERAL> | <UNDERSCORE> )* >
+}
+
+/*
+ * PRODUCTION
+ */
+Context Context(ParserContext ctx):
+{
+    String name;
+    List<ContextElement> elements = new ArrayList<ContextElement>();
+}
+{
+    < KEYWORD_CREATE >
+    < KEYWORD_CONTEXT >
+    name = Identifier()
+    elements = ActiveIfClause(ctx)
+    { return new Context(name, elements); }
+}
+
+/*
+ * ACTIVE IF CLAUSE
+ */
+List<ContextElement> ActiveIfClause(ParserContext ctx) :
+{
+    List<ContextElement> elements = new ArrayList<ContextElement>();
+    ContextElement c;
+}
+{
+    < KEYWORD_ACTIVE >
+    < KEYWORD_IF >
+    (
+		LOOKAHEAD(2)
+        c = CreateContextElement(ctx)
+       	|
+       	LOOKAHEAD(2)
+       	c = CreateContextElemAtt(ctx)
+     )
+    {
+        elements.add(c);
+    }
+    (
+        < OPERATOR_AND >
+		(
+		    LOOKAHEAD(2)
+        	c = CreateContextElement(ctx)
+       		|
+       		LOOKAHEAD(2)
+       		c = CreateContextElemAtt(ctx)
+      	)
+        { elements.add(c); }
+    )*
+    < EOF >
+    { return elements; }
+}
+
+/*
+ * CREATE SIMPLE CONTEXT ELEMENT Dimension = Concept
+ */
+ContextElement CreateContextElement(ParserContext ctx):
+{
+    String dimension;
+    String concept;
+}
+{
+	dimension = Identifier()
+	<OPERATOR_EQUAL>
+	concept = Identifier()
+    { return ContextElemSimple.create(dimension, concept, ctx); }
+}
+
+/*
+ * CREATE CONTEXT ELEMENT Dimension.attribute OP value
+ */
+ContextElement CreateContextElemAtt(ParserContext ctx) :
+{
+  String dimension;
+  String attribute = " ";
+  ExpressionAST e;
+}
+{
+    dimension = Identifier()
+	< KEYWORD_DOT >
+	{	  attribute = getToken(1).image;	}	
+	e = Expression(ExpressionType.SIMPLE, "context element", ctx)
+	{ return ContextElemAtt.create(dimension, attribute, e, ctx); }
+}
+
+/*
+ * SIGNS, CONSTANTS, VALUES, ETC.
+ */
+Sign Sign() :
+{}
+{
+    <OPERATOR_PLUS>
+    { return Sign.PLUS; }
+    |
+    <OPERATOR_MINUS>
+    { return Sign.MINUS; }
+}
+
+LogicValue ConstantBoolean() :
+{}
+{
+    (
+        <CONSTANT_BOOLEAN_TRUE>
+        { return LogicValue.TRUE; }
+        |
+        <CONSTANT_BOOLEAN_FALSE>
+        { return LogicValue.FALSE; }
+    )
+}
+
+float ConstantFloat() :
+{
+    Token value;
+}
+{
+    (
+        value = <CONSTANT_FLOAT>
+    )
+    { return Float.parseFloat(value.image); }
+}
+
+int ConstantInteger() :
+{
+    Token value;
+}
+{
+    value = <CONSTANT_INTEGER_10>
+    { return Integer.parseInt(value.image); }
+    |
+    value = <CONSTANT_INTEGER_16>
+    { return Integer.parseInt(value.image.substring(2), 16); }
+}
+
+String ConstantString() :
+{
+    Token value;
+}
+{
+    (
+        (
+        <CONSTANT_SINGLE_QUOTED_STRING_START>
+        value = <CONSTANT_SINGLE_QUOTED_STRING_VALUE>
+        <CONSTANT_SINGLE_QUOTED_STRING_END>
+        )
+        |
+        (
+        <CONSTANT_DOUBLE_QUOTED_STRING_START>
+        value = <CONSTANT_DOUBLE_QUOTED_STRING_VALUE>
+        <CONSTANT_DOUBLE_QUOTED_STRING_END>
+        )
+    )
+    { return value.image; }
+}
+
+ConstantAST Constant() :
+{
+    Object value;
+}
+{
+    (
+        value = ConstantBoolean()
+        { return new ConstantAST(token, DataType.BOOLEAN, value); }
+        |
+        value = ConstantString()
+        { return new ConstantAST(token, DataType.STRING, value); }
+        |
+        LOOKAHEAD(1)
+        value = ConstantInteger()
+        { return new ConstantAST(token, DataType.INTEGER, value); }
+        |
+        value = ConstantFloat()
+        { return new ConstantAST(token, DataType.FLOAT, value); }
+    )
+}
+
+ComparisonOperation ComparisonOperation() :
+{}
+{
+    <OPERATOR_GREATER>
+    { return ComparisonOperation.GT; }
+    |
+    <OPERATOR_LESS>
+    { return ComparisonOperation.LT; }
+    |
+    <OPERATOR_GREATER_EQUAL>
+    { return ComparisonOperation.GE; }
+    |
+    <OPERATOR_LESS_EQUAL>
+    { return ComparisonOperation.LE; }
+    |
+    <OPERATOR_EQUAL>
+    { return ComparisonOperation.EQ; }
+    |
+    <OPERATOR_NOT_EQUAL>
+    { return ComparisonOperation.NE; }
+}
+
+
+String Identifier() :
+{
+    Token value;
+}
+{
+    value = <IDENTIFIER>
+    { return value.image; }
+}
+
+/*
+ * EXPRESSIONS
+ */
+ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{ 
+    e1 = BooleanTerm(type, src, ctx) 
+	
+    (
+        t = <OPERATOR_OR>
+        e2 = BooleanTerm(type, src, ctx)
+        { e1 = new BoolAST(t, BoolOperation.OR, e1, e2);
+        }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{ 
+    e1 = BooleanFactor(type, src, ctx)
+    
+    (
+        t = <OPERATOR_AND>
+        e2 = BooleanFactor(type, src, ctx)
+        { e1 = new BoolAST(t, BoolOperation.AND, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BooleanNegation(type, src, ctx) 
+    (
+        t = <OPERATOR_XOR>
+        e2 = BooleanNegation(type, src, ctx)
+        { e1 = new BoolAST(t, BoolOperation.XOR, e1, e2);}
+    )*
+    { return e1; }
+}
+
+ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e;
+    boolean invert = false;
+
+    Token t = null;
+}
+{
+    (
+        t = <OPERATOR_NOT>
+        {
+            invert = !invert;
+        }
+    )*
+    e = BooleanPredicate(type, src, ctx)
+    {
+        if (invert) {
+            e = new NotAST(t, e);
+        }
+        return e;
+    }
+}
+
+ExpressionAST BooleanPredicate(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e;
+}
+{
+    e = Comparison(type, src, ctx)
+    [
+        e = Is(e)
+        |
+        e = Like(e)
+        |
+        e = Between(e, type, src, ctx)
+    ]
+    { return e; }
+}
+
+ExpressionAST Is(ExpressionAST e) :
+{
+    boolean invert = false;
+    ExpressionAST is;
+
+    Token t;
+}
+{
+    t = <KEYWORD_IS>
+    [
+        <OPERATOR_NOT>
+        { invert = true; }
+    ]
+    (
+        <CONSTANT_BOOLEAN_TRUE>
+        { is = new IsAST(t, e, LogicValue.TRUE); }
+        |
+        <CONSTANT_BOOLEAN_FALSE>
+        { is = new IsAST(t, e, LogicValue.FALSE); }
+        |
+        <CONSTANT_BOOLEAN_UNKNOWN>
+        { is = new IsAST(t, e, LogicValue.UNKNOWN); }
+        |
+        <CONSTANT_NULL>
+        { is = new IsNullAST(t, e); }
+    )
+    {
+        if (invert) {
+            is = new NotAST(t, is);
+        }
+        return is;
+    }
+}
+
+ExpressionAST Like(ExpressionAST e) :
+{
+    String pattern;
+    Expression like;
+
+    Token t;
+}
+{
+    t = <KEYWORD_LIKE>
+    pattern = ConstantString()
+    { return new LikeAST(t, e, pattern); }
+}
+
+ExpressionAST Between(ExpressionAST e, ExpressionType type,
+        String src, ParserContext ctx) :
+{
+    ExpressionAST b;
+    ExpressionAST min;
+    ExpressionAST max;
+
+    Token t;
+}
+{
+    t = <KEYWORD_BETWEEN>
+    min = BitwiseExpression(type, src, ctx)
+    <OPERATOR_AND>
+    max = BitwiseExpression(type, src, ctx)
+    {
+        return new BetweenAST(t, e, min, max);
+    }
+}
+
+ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    ComparisonOperation op;
+
+    Token t;
+}
+{
+  
+    e1 = BitwiseExpression(type, src, ctx) 
+    [
+        op = ComparisonOperation()
+        { t = token; }
+        e2 = BitwiseExpression(type, src, ctx)
+        {
+            e1 = new ComparisonAST(t, op, e1, e2);
+        }
+    ]
+    { return e1; }
+}
+
+ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BitwiseTerm(type, src, ctx)
+    (
+        t = <OPERATOR_BITWISE_OR>
+        e2 = BitwiseTerm(type, src, ctx)
+        { e1 = new BitwiseAST(t, BitwiseOperation.OR, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BitwiseFactor(type, src, ctx)
+    (
+        t = <OPERATOR_BITWISE_AND>
+        e2 = BitwiseFactor(type, src, ctx)
+        { e1 = new BitwiseAST(t, BitwiseOperation.AND, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BitwiseShift(type, src, ctx)
+    (
+        t = <OPERATOR_BITWISE_XOR>
+        e2 = BitwiseShift(type, src, ctx)
+        { e1 = new BitwiseAST(t, BitwiseOperation.XOR, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    BitwiseOperation op;
+
+    Token t;
+}
+{
+    e1 = BitwiseNegation(type, src, ctx)
+    (
+        (
+            t = <OPERATOR_BITWISE_LSH>
+            { op = BitwiseOperation.LSH; }
+            |
+            t = <OPERATOR_BITWISE_RSH>
+            { op = BitwiseOperation.RSH; }
+        )
+        e2 = BitwiseNegation(type, src, ctx)
+        { e1 = new BitwiseAST(t, op, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e;
+    boolean not = false;
+
+    Token t = null;
+}
+{
+    (
+        t = <OPERATOR_BITWISE_NOT>
+        { not = !not; }
+    )*
+    e = ArithmeticExpression(type, src, ctx)
+    {
+        if (not) {
+            e = new BitwiseNotAST(t, e);
+        }
+        return e;
+    }
+}
+
+ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    ArithmeticOperation op;
+
+    Token t;
+}
+{
+    e1 = ArithmeticTerm(type, src, ctx)
+    (
+        (
+            t = <OPERATOR_PLUS>
+            { op = ArithmeticOperation.ADDITION; }
+            |
+            t = <OPERATOR_MINUS>
+            { op = ArithmeticOperation.SUBTRACTION; }
+        )
+        e2 = ArithmeticTerm(type, src, ctx)
+        { e1 = new ArithmeticAST(t, op, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    ArithmeticOperation op;
+
+    Token t;
+}
+{
+    e1 = ArithmeticFactor(type, src, ctx)
+    (
+        (
+            t = <OPERATOR_MULTIPLY>
+            { op = ArithmeticOperation.PRODUCT; }
+            |
+            t = <OPERATOR_DIVIDE>
+            { op = ArithmeticOperation.DIVISION; }
+            |
+            t = <OPERATOR_MODULO>
+            { op = ArithmeticOperation.MODULO; }
+        )
+        e2 = ArithmeticFactor(type, src, ctx)
+        { e1 = new ArithmeticAST(t, op, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e;
+    Sign s = Sign.PLUS;
+
+    Token t = null;
+}
+{
+    [
+        s = Sign()
+        { t = token; }
+    ]
+    e = PrimaryExpression(type, src, ctx)
+    {
+        if (s == Sign.MINUS) {
+            e = new InverseAST(t, e);
+        }
+        return e;
+    }
+}
+
+ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx) :
+{
+    ExpressionAST e;
+
+    Token t = null;
+}
+{ 
+    e = Constant() 
+    { return e; }
+    |
+    (
+        "("
+        e = Expression(type, src, ctx) 
+        { return e; }
+        ")"
+    )
+        |
+    { t = getToken(1); }
+    e = AttributeReference()
+    {
+        if (type == ExpressionType.CONSTANT) {
+            ctx.addError("Only constant expressions are allowed in " + src +
+                " at " + getPosition(t));
+            return ConstantAST.NULL;
+        } else {
+            return e;
+        }
+    }
+ }
+
+AttributeReferenceAST AttributeReference() :
+{
+    String id;
+    DataType type = DataType.ANY;
+
+    Token t;
+}
+{
+    id = Identifier()
+    { t = token; }
+    [
+        ":"
+        type = Type()
+    ]
+    { return new AttributeReferenceAST(token, id, type); }
+}
+
+DataType Type() :
+{}
+{
+    <TYPE_ID>
+    { return DataType.ID; }
+    |
+    <TYPE_TIMESTAMP>
+    { return DataType.TIMESTAMP; }
+    |
+    <TYPE_BOOLEAN>
+    { return DataType.BOOLEAN; }
+    |
+    <TYPE_INTEGER>
+    { return DataType.INTEGER; }
+    |
+    <TYPE_FLOAT>
+    { return DataType.FLOAT; }
+    |
+    <TYPE_STRING>
+    { return DataType.STRING; }
+    |
+    <TYPE_ANY>
+    { return DataType.ANY; }
+}
+
+
+
