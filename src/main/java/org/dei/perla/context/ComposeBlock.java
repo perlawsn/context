@@ -5,53 +5,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.dei.perla.cdt.PartialComponent;
 import org.dei.perla.core.fpc.Attribute;
 import org.dei.perla.core.fpc.DataType;
 import org.dei.perla.lang.parser.OnEmptySelection;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.*;
 import org.dei.perla.lang.query.expression.BoolOperation;
-import org.dei.perla.lang.query.statement.GroupBy;
-import org.dei.perla.lang.query.statement.Refresh;
+import org.dei.perla.lang.query.statement.RatePolicy;
 import org.dei.perla.lang.query.statement.RefreshType;
-import org.dei.perla.lang.query.statement.Statement;
 import org.dei.perla.lang.query.statement.WindowSize;
 import org.dei.perla.lang.query.statement.WindowSize.WindowType;
 
 public class ComposeBlock {
 	
-	/*
-	 * SELECTION								INSERTION
-	 * WindowSizeAST every;					String stream, List<String> field, SelectionStatement
-     List<FieldSelectionAST> fields;
-     GroupByAST groupBy;
-     ExpressionAST having;				CREATION: UGUALE A insertion
-     WindowSizeAST upto;
-     OnEmptySelection oes;
-     SamplingAST sampling;
-     ExpressionAST where;
-     ExecutionConditionsAST execCond;
-     WindowSizeAST terminate;
-	 */
-	public List<Statement> composeEnableComponent(List<PartialComponent> enables, ParserContext ctx){
-		enables = enables.stream().filter(e -> e.getStatement()!=null).collect(Collectors.toList());
-		List<SelectionStatementAST> sels = new ArrayList<SelectionStatementAST>();
-		for(PartialComponent p: enables){
-			if(p.getStatement() instanceof SelectionStatementAST){
-				SelectionStatementAST sel = (SelectionStatementAST) p.getStatement();
-				sels.add(sel);
-			}
-		}
+	public StatementAST composeEnableComponent(List<SelectionStatementAST> sels, ParserContext ctx) {
 		List<WindowSizeAST> everyList = new ArrayList<WindowSizeAST>();			
 		List<FieldSelectionAST> fieldList = new ArrayList<FieldSelectionAST>();
-		List<GroupByAST> groupByList = new ArrayList<GroupByAST>();
+		List<String> groupByFields = new ArrayList<String>();
 		List<ExpressionAST> havingList = new ArrayList<ExpressionAST>();				
 		List<WindowSizeAST> upToList = new ArrayList<WindowSizeAST>();
-		List<OnEmptySelection> oesList = new ArrayList<OnEmptySelection>();
 		List<SamplingAST> samplingList = new ArrayList<SamplingAST>();
 		List<ExpressionAST> whereList = new ArrayList<ExpressionAST>();
 		List<ExecutionConditionsAST> execCondList = new ArrayList<ExecutionConditionsAST>();
@@ -61,11 +35,10 @@ public class ComposeBlock {
 			everyList.add(sel.getEvery());
 			fieldList.addAll(sel.getFields());
 			if(sel.getGroupBy() != null){
-				groupByList.add(sel.getGroupBy());
+				groupByFields.addAll(sel.getGroupBy().getFields());
 			}
 			havingList.add(sel.getHaving());
 			upToList.add(sel.getUpto());
-			oesList.add(sel.getOnEmptySelection());
 			samplingList.add(sel.getSamplingAST());
 			whereList.add(sel.getWhere());
 			execCondList.add(sel.getExecutionConditions());
@@ -73,15 +46,17 @@ public class ComposeBlock {
 		}
 		
 		WindowSizeAST every = composeWindowSize(everyList, ctx);
-		List<FieldSelectionAST> fields = composeFieldSelection(fieldList, ctx);
 		ExpressionAST having = composeHaving(havingList, ctx);				
 		WindowSizeAST upto = composeWindowSize(upToList, ctx);
-		OnEmptySelection oes = composeOnEmptySelection(oesList, ctx);
+		OnEmptySelection oes = OnEmptySelection.NOTHING;
 		SamplingAST sampling = composeSampling(samplingList, ctx);
 		ExpressionAST where = composeWhere(whereList, ctx);
 		ExecutionConditionsAST execCond = composeExecCond(execCondList, ctx);
 		WindowSizeAST terminate = composeTerminate(terminateList, ctx);
-		return null;
+		
+		return new SelectionStatementAST(every, fieldList, 
+				new GroupByAST(groupByFields), having, upto, oes, sampling,
+                where, execCond, terminate);
 	}
 	
 	public WindowSizeAST composeWindowSize(List<WindowSizeAST> everyASTList, ParserContext ctx){
@@ -146,12 +121,6 @@ public class ComposeBlock {
 		return everyListAST.get(0);
 	}
 	
-	private List<FieldSelectionAST> composeFieldSelection(
-			List<FieldSelectionAST> fieldList, ParserContext ctx){
-		return null;
-	}
-
-	
 	public ExpressionAST composeHaving(List<ExpressionAST> havingList, ParserContext ctx){
 		if(havingList.isEmpty())
 			return ConstantAST.TRUE;
@@ -163,12 +132,43 @@ public class ComposeBlock {
 		return having;
 	}
 	
-	private OnEmptySelection composeOnEmptySelection(List<OnEmptySelection> oesList, ParserContext ctx){
-		return OnEmptySelection.NOTHING;
-	}
-	private SamplingAST composeSampling(List<SamplingAST> samplingList, ParserContext ctx){
-		
+	public SamplingAST composeSampling(List<SamplingAST> samplingList, ParserContext ctx){
+		int event = 0;
+		int ifEvery = 0;
+		for(SamplingAST s: samplingList){
+			if(s instanceof SamplingEventAST) event++;
+			else ifEvery++;
+		}
+		if(event > 0 && ifEvery > 0)
+			ctx.addError("SAMPLING clauses are incompatible");
+		if(!ctx.hasErrors()){
+			if(event > 0)
+				return composeEventSampling(samplingList);
+			else
+				return composeIfEverySampling(samplingList, ctx);
+		}
 		return null;
+	}
+	
+	private SamplingAST composeEventSampling(List<SamplingAST> samplingList){
+		List<String> events = new ArrayList<String>();
+		for(SamplingAST s: samplingList){
+			SamplingEventAST e = (SamplingEventAST) s;
+			events.addAll(e.getEvents());
+		}
+		return new SamplingEventAST(events);
+	}
+	
+	private SamplingAST composeIfEverySampling(List<SamplingAST> samplingList, ParserContext ctx){
+		List<IfEveryAST> ifevery = new ArrayList<IfEveryAST>();
+		List<RefreshAST> refreshes = new ArrayList<RefreshAST>();
+		for(SamplingAST s: samplingList){
+			SamplingIfEveryAST e = (SamplingIfEveryAST) s;
+			ifevery.addAll(e.getIfEvery());
+			refreshes.add(e.getRefresh());
+		}
+		RefreshAST refresh = this.findMinRefreshValue(refreshes, ctx);
+		return new SamplingIfEveryAST(ifevery, RatePolicy.STRICT, refresh);
 	}
 	
 	public ExpressionAST composeWhere(List<ExpressionAST> whereList, ParserContext ctx){
@@ -186,7 +186,6 @@ public class ComposeBlock {
 			List<ExecutionConditionsAST> execCondList, ParserContext ctx){
 		if(execCondList.isEmpty())
 			return ExecutionConditionsAST.ALWAYS;
-		ExecutionConditionsAST ec = execCondList.get(0);
 		List<ExpressionAST> conds = new ArrayList<ExpressionAST>();
 		List<Attribute> atts = new ArrayList<Attribute>();
 		List<RefreshAST> refreshes = new ArrayList<RefreshAST>();

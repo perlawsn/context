@@ -11,6 +11,8 @@ public class Context {
 	private final List<ContextElement> contElements;
 	private List<Statement> enable;
 	private List<Statement> disable;
+	private boolean validEnable;
+	private boolean validDisable;
 	private Refresh refresh;
 	private boolean isActive;
 	
@@ -18,6 +20,8 @@ public class Context {
 		this.contElements = contElements;
 		this.name = name;
 		isActive = false;
+		setValidEnable(false);
+		setValidDisable(false);
 	}
 	
 	public String getName() {
@@ -58,6 +62,22 @@ public class Context {
 
 	public void setRefresh(Refresh refresh) {
 		this.refresh = refresh;
+	}
+
+	public boolean isValidEnable() {
+		return validEnable;
+	}
+
+	public void setValidEnable(boolean validEnable) {
+		this.validEnable = validEnable;
+	}
+
+	public boolean isValidDisable() {
+		return validDisable;
+	}
+
+	public void setValidDisable(boolean validDisable) {
+		this.validDisable = validDisable;
 	}
 	
 

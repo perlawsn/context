@@ -69,6 +69,7 @@ public class Concept extends Node{
 			return atts.get(index);
 	}
     
+
     public String toString(){
     	StringBuffer s = new StringBuffer("");
     	// to do
