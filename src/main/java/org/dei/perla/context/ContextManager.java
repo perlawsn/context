@@ -36,11 +36,14 @@ public class ContextManager {
 	private Context activeContext;
 	private ComposeBlock composeBlock;
 	
+	private List<RefreshContext> refreshContext;
+	
 	public ContextManager(CDT cdt) {
 		this.cdt = cdt;
 		contexts = new ArrayList<Context>();
 		activeContext = null;
 		composeBlock = new ComposeBlock();
+		refreshContext = new ArrayList<RefreshContext>();
 	}
 	
 	public CDT getCDT(){
@@ -54,7 +57,14 @@ public class ContextManager {
 	public Context getActiveContext(){
 		return activeContext;
 	}
-	
+
+	public void addContext(Context context) {
+		contexts.add(context);
+		RefreshContext r = new RefreshContext(context);
+		refreshContext.add(r);
+		r.start();
+	}
+
 
 	private List<Statement> composeEnableComponent(Context context, List<PartialComponent> enables){
 		ParserContext ctxSel = new ParserContext();
@@ -154,9 +164,9 @@ public class ContextManager {
 		
 	}
 	
-	//to do
 	public void executeActiveContextAction(){
 		
 	}
+
 
 }

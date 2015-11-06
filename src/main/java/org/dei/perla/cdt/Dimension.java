@@ -9,7 +9,8 @@ public class Dimension extends Node{
 	private final String father;
 	private final CreateAttr att;
 	private final List<Concept> concepts;
-	private Concept correntValue;
+	private Concept corrValue;
+	private String correntValue;
 	
 	public Dimension(String name, String father, CreateAttr att){
 		super(name);
@@ -54,18 +55,30 @@ public class Dimension extends Node{
 		return "DIMENSION " + name + " CHILD OF " + father + children;
 	}
 
-	public Concept getCorrentValue() {
+	public Concept getCorrValue() {
+		return corrValue;
+	}
+
+	public String getCorrentValue() {
 		return correntValue;
 	}
 
+	public void setCorrentValue(String correntValue) {
+		Concept c = CDTUtils.getConcept(name, correntValue);
+		if(!concepts.contains(c))
+			throw new RuntimeException(
+                    "Dimension " + name + " has not the Concept " + correntValue);
+		this.correntValue = correntValue;
+	}
+	
 	/*
 	 * setta il valore corrente di una domensione
 	 */
-	public void setCorrentValue(Concept correntValue) {
+	public void setCorrValue(Concept correntValue) {
 		if(!concepts.contains(correntValue))
 			throw new RuntimeException(
                     "Dimension " + name + " has not the Concept " + correntValue.getName() );
-		this.correntValue = correntValue;
+		this.corrValue = correntValue;
 	}
 
 }

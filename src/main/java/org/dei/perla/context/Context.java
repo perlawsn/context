@@ -1,11 +1,14 @@
 package org.dei.perla.context;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 import org.dei.perla.lang.query.statement.Refresh;
 import org.dei.perla.lang.query.statement.Statement;
 
-public class Context {
+public class Context extends Observable {
 	
 	private final String name;
 	private final List<ContextElement> contElements;
@@ -15,6 +18,8 @@ public class Context {
 	private boolean validDisable;
 	private Refresh refresh;
 	private boolean isActive;
+	
+	private ArrayList<Observer> observers = new ArrayList<Observer>();
 	
 	public Context(String name, List<ContextElement> contElements) {
 		this.contElements = contElements;
@@ -36,8 +41,12 @@ public class Context {
 		return isActive;
 	}
 	
-	public void setActive(){
-		isActive = true;
+	public void setActive(boolean active){
+		this.isActive = active;
+		if(isActive)
+			notifyObservers(this, enable);
+		else
+			notifyObservers(this, disable);
 	}
 
 	public List<Statement> getEnable() {
@@ -80,5 +89,17 @@ public class Context {
 		this.validDisable = validDisable;
 	}
 	
+	public ArrayList<Observer> getObservers() {
+		return observers;
+	}
+	public void setObservers(ArrayList<Observer> observers) {
+		this.observers = observers;
+	}
+	
+	public void notifyObservers(Observable observable, List<Statement> blocks) {
+		 for (Observer ob : observers) {
+             ob.update(observable, blocks);
+      }
+	}
 
 }

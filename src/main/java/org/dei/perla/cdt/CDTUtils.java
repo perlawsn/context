@@ -1,5 +1,10 @@
 package org.dei.perla.cdt;
 
-public class CDTUtils {
+public final class CDTUtils {
 
+	private static final CDT cdt = CDT.getCDT();
+	
+	public static Concept getConcept(String dimension, String concept){
+		return cdt.getConceptOfDim(dimension, concept);
+	}
 }
