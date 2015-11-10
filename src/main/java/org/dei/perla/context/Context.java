@@ -22,6 +22,7 @@ public class Context extends Observable {
 	private ArrayList<Observer> observers = new ArrayList<Observer>();
 	
 	public Context(String name, List<ContextElement> contElements) {
+		super();
 		this.contElements = contElements;
 		this.name = name;
 		isActive = false;
@@ -53,10 +54,18 @@ public class Context extends Observable {
 		return enable;
 	}
 
+	public boolean getValidEnable() {
+		return validEnable;
+	}
+	
 	public void setEnable(List<Statement> enable) {
 		this.enable = enable;
 	}
 
+	public boolean getValidDisable() {
+		return validDisable;
+	}
+	
 	public List<Statement> getDisable() {
 		return disable;
 	}

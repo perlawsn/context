@@ -26,7 +26,7 @@ public class RefreshContext {
 	
 	public RefreshContext(Context context){
 		this.context = context;
-		scheduler = Executors.newScheduledThreadPool(3);
+		scheduler = Executors.newSingleThreadScheduledExecutor();
 		status = STOPPED;
 	}
 	

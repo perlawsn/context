@@ -9,41 +9,42 @@ import java.util.stream.Collectors;
 
 import org.dei.perla.cdt.CDT;
 import org.dei.perla.cdt.Concept;
+import org.dei.perla.cdt.CreateAttr;
+import org.dei.perla.cdt.Dimension;
 import org.dei.perla.cdt.PartialComponent;
-import org.dei.perla.lang.parser.OnEmptySelection;
+import org.dei.perla.cdt.QueryEvaluatedOn;
+import org.dei.perla.cdt.parser.CDTreeParser;
+import org.dei.perla.cdt.parser.ParseException;
+import org.dei.perla.context.parser.ContextParser;
 import org.dei.perla.lang.parser.ParserContext;
-import org.dei.perla.lang.parser.ast.CreationStatementAST;
-import org.dei.perla.lang.parser.ast.ExecutionConditionsAST;
-import org.dei.perla.lang.parser.ast.ExpressionAST;
-import org.dei.perla.lang.parser.ast.FieldSelectionAST;
-import org.dei.perla.lang.parser.ast.GroupByAST;
-import org.dei.perla.lang.parser.ast.InsertionStatementAST;
-import org.dei.perla.lang.parser.ast.SamplingAST;
 import org.dei.perla.lang.parser.ast.SelectionStatementAST;
 import org.dei.perla.lang.parser.ast.SetStatementAST;
-import org.dei.perla.lang.parser.ast.WindowSizeAST;
-import org.dei.perla.lang.query.statement.CreationStatement;
-import org.dei.perla.lang.query.statement.InsertionStatement;
+import org.dei.perla.lang.parser.ast.StatementAST;
 import org.dei.perla.lang.query.statement.Refresh;
 import org.dei.perla.lang.query.statement.SelectionStatement;
-import org.dei.perla.lang.query.statement.SetStatement;
 import org.dei.perla.lang.query.statement.Statement;
 
 public class ContextManager {
 	
+	private final CDTreeParser cdtParser;
 	private CDT cdt;
+	private final ContextParser ctxParser;
 	private List<Context> contexts;
-	private Context activeContext;
+	private List<Context> invalidContexts;
 	private ComposeBlock composeBlock;
-	
 	private List<RefreshContext> refreshContext;
+	private final ContextExecutor ctxExecutor;
 	
-	public ContextManager(CDT cdt) {
-		this.cdt = cdt;
+	
+	public ContextManager() {
+		cdt = null;
+		cdtParser = new CDTreeParser();
+		ctxParser = new ContextParser();
 		contexts = new ArrayList<Context>();
-		activeContext = null;
+		invalidContexts = new ArrayList<Context>();
 		composeBlock = new ComposeBlock();
 		refreshContext = new ArrayList<RefreshContext>();
+		ctxExecutor = new ContextExecutor();
 	}
 	
 	public CDT getCDT(){
@@ -54,17 +55,93 @@ public class ContextManager {
 		return contexts;
 	}
 	
-	public Context getActiveContext(){
-		return activeContext;
+	public List<Context> getInvalidContexts() {
+		return invalidContexts;
+	}
+	
+	public Context getContext(String ctxName){
+		for(Context c: contexts){
+			if(c.getName().equals(ctxName))
+				return c;
+		}
+		return null;
+	}
+	
+	private int getIndexContext(String ctxName){
+		for(int i=0; i<contexts.size(); i++){
+			if(contexts.get(i).getName().equals(ctxName))
+				return i;
+		}
+		return -1;
+	}
+	
+	public void createCDT(String text) throws ParseException{
+		cdt = cdtParser.parse(text);
 	}
 
-	public void addContext(Context context) {
-		contexts.add(context);
-		RefreshContext r = new RefreshContext(context);
-		refreshContext.add(r);
-		r.start();
+	//aggiungere controllo sul nome
+	public void createContext(String text) throws org.dei.perla.context.parser.ParseException {
+		if(cdt==null)
+			throw new RuntimeException("Before creating a context it is necessary to create the CDT");
+		Context ctx = ctxParser.parse(text);
+		composeBlock(ctx);
+		if(ctx.getValidDisable() && ctx.getValidEnable()) {
+			ctx.addObserver(ctxExecutor);
+			contexts.add(ctx);
+			RefreshContext r = new RefreshContext(ctx);
+			refreshContext.add(r);
+			r.start();
+		}
+		else
+			invalidContexts.add(ctx);
+	}
+	
+	public void removeContext(String ctxName) {
+		int index = getIndexContext(ctxName);
+		if(index > 0){
+			contexts.remove(index);
+			refreshContext.remove(index);
+		}
 	}
 
+	public void changeContext(String ctxName){
+		removeContext(ctxName);
+	}
+	
+	public void correctContext(String ctxName, List<StatementAST> enableAST, List<StatementAST> disableAST){
+		List<Statement> enable = new ArrayList<Statement>();
+		List<Statement> disable = new ArrayList<Statement>();
+		ParserContext ctx = new ParserContext();
+		Statement s = null;
+		for(StatementAST ast: enableAST){
+			s = ast.compile(ctx);
+			enable.add(s);
+		}
+		for(StatementAST ast: disableAST){
+			s = ast.compile(ctx);
+			disable.add(s);
+		}
+		if(ctx.hasErrors())
+			System.out.println("Query Perla contains the folliwing errors: " + ctx.getErrorDescription());
+		else {
+			Context toCorrect = null;
+			for(Context c: invalidContexts){
+				if(c.getName().equals(ctxName)){
+					toCorrect = c;
+					break;
+				}
+			}
+			toCorrect.setEnable(enable);
+			toCorrect.setDisable(disable);
+			toCorrect.setValidDisable(true);
+			toCorrect.setValidEnable(true);
+			toCorrect.addObserver(ctxExecutor);
+			contexts.add(toCorrect);
+			RefreshContext r = new RefreshContext(toCorrect);
+			refreshContext.add(r);
+			r.start();
+		}
+	}
 
 	private List<Statement> composeEnableComponent(Context context, List<PartialComponent> enables){
 		ParserContext ctxSel = new ParserContext();
@@ -91,8 +168,10 @@ public class ContextManager {
 			System.out.println("ENABLE BLOCK is not semantically and/or syntactically correct, "
 					+ "the following errors have been signaled: \n" + ctx.getErrorDescription() 
 					+ "\n" + ctxSel.getErrorDescription());
-			System.out.println("\nThe user must correct these errors manually ");
-		}
+			System.out.println("\nThe user must correct these errors manually otherwise the context will not "
+					+ "be accepted ");
+		} else
+			context.setValidEnable(true);
 		stats.add(sel);
 		return stats;
 	}
@@ -116,6 +195,8 @@ public class ContextManager {
 			context.setValidDisable(false);
 			System.out.println(ctx.getErrorDescription());
 			System.out.println("\nThe user must correct these errors manually ");
+		} else {
+			context.setValidDisable(true);
 		}
 		return stats;
 	}
@@ -134,7 +215,7 @@ public class ContextManager {
 	}
 
 	
-	public void composeBlock(Context context){
+	private void composeBlock(Context context){
 		List<ContextElemSimple> simpleElements = new ArrayList<ContextElemSimple>();
 		for(ContextElement c: context.getContextElements()){
 			if(c instanceof ContextElemSimple)
@@ -159,14 +240,31 @@ public class ContextManager {
 		context.setDisable(disable);
 	}
 	
-	//to do
+	//quando il cd è pronto, bisogna prendere tutte le query delle condizioni when dei concetti e degli attributi
 	public void populateCDT(){
+		for(Dimension d: cdt.getDimensions()){
+			CreateAttr att = d.getAttribute();
+			if(att.equals(CreateAttr.EMPTY)){
+				if(att.getEvaluatedOn() instanceof QueryEvaluatedOn){
+					QueryEvaluatedOn query = (QueryEvaluatedOn) att.getEvaluatedOn();
+					StatementAST queryAtt = query.getQueryEvaluatedOn();
+					//da inviare all'esecutore
+					//una volta ricevuto i risultati, assegnare il valore all'attributo
+				}
+				else 
+					throw new RuntimeException("it's impossible to retrieve the attribute");
+			}
+			else {
+				for(Concept c: d.getConcepts()){
+					StatementAST when = c.getWhen().getEvaluatedOn();
+					//da inviare all'esecutore
+					//una volta ricevuti i risultati, valutare quale Concetto assegnare alla dimensione
+				}
+			}
+		}
 		
 	}
 	
-	public void executeActiveContextAction(){
-		
-	}
 
 
 }

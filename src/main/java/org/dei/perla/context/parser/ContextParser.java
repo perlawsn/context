@@ -13,7 +13,7 @@ import org.dei.perla.lang.query.expression.Expression;
 
 public class ContextParser {
 
-	public Context parser(String text) throws ParseException  {
+	public Context parse(String text) throws ParseException  {
         ParserContext ctx = new ParserContext();
         Context context;
         ContParser p = new ContParser(new StringReader(text));

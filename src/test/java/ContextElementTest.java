@@ -13,6 +13,7 @@ import org.dei.perla.context.parser.ContParser;
 import org.dei.perla.context.parser.ParseException;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.ComparisonAST;
+import org.dei.perla.lang.query.expression.Comparison;
 import org.dei.perla.lang.query.statement.Refresh;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +83,7 @@ public class ContextElementTest {
         ContextElemAtt ca = (ContextElemAtt) ce.get(0);
         assertThat(ca.getAttribute(), equalTo("id_apparecchio"));
         assertFalse(ctx.hasErrors());
-        assertTrue(ca.getExpression() instanceof ComparisonAST);
+        assertTrue(ca.getExpression() instanceof Comparison);
 	}
 
 

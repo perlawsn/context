@@ -76,12 +76,11 @@ public class WhenCondition {
 	}
 	
 	 /* It is advisable that the user specifies a EVALUATED ON clause associated to the 
-	 * WHEN condition clause. Otherwise, the system creates a default EVALUATED ON clause pf the type
+	 * WHEN condition clause. Otherwise, the system creates a default EVALUATED ON clause of the type
 	 * EVERY ONE 
 	 * SELECT attributes (of the WHEN condition)
-	 * SAMPLING EVERY 1 m
+	 * SAMPLING EVERY 10 m
 	 * EXECUTE IF REQUIRE(attributes)
-	 * TERMINATE AFTER 1 SELECTIONS
 	 */ 
 	private static SelectionStatementAST createDefaultEvaluatedOn(List<String> attString){
 		List<Attribute> atts = attString.stream().
@@ -94,7 +93,7 @@ public class WhenCondition {
 	    		.collect(Collectors.toList()); 
 	    
 	    List<IfEveryAST> ifeList = new ArrayList<IfEveryAST>();
-	    EveryAST every2 = new EveryAST(ConstantAST.ONE, ChronoUnit.MINUTES);
+	    EveryAST every2 = new EveryAST(new ConstantAST(10, DataType.INTEGER), ChronoUnit.MINUTES);
 	    IfEveryAST ife = new IfEveryAST(ConstantAST.TRUE, every2);
         ifeList.add(ife);
 	    SamplingAST sampling = new SamplingIfEveryAST(ifeList, RatePolicy.STRICT, RefreshAST.NEVER);
@@ -102,7 +101,7 @@ public class WhenCondition {
 	    ExecutionConditionsAST ec = 
 	    		new ExecutionConditionsAST(ConstantAST.TRUE, specs, RefreshAST.NEVER); 
 	    return new SelectionStatementAST(every, fsl, null, ConstantAST.TRUE, WindowSizeAST.ONE,
-	    		OnEmptySelection.NOTHING, sampling, ConstantAST.TRUE, ec, WindowSizeAST.ONE);
+	    		OnEmptySelection.NOTHING, sampling, ConstantAST.TRUE, ec, null);
 	}
 	
 	public String toString(){

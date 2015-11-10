@@ -8,7 +8,7 @@ import org.dei.perla.lang.parser.ParserContext;
 
 public final class CDTreeParser {
 
-    public CDT parser(String text) throws ParseException  {
+    public CDT parse(String text) throws ParseException  {
         ParserContext ctx = new ParserContext();
         CDT cdt;
 
