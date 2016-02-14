@@ -14,8 +14,6 @@ public class Context extends Observable {
 	private final List<ContextElement> contElements;
 	private List<Statement> enable;
 	private List<Statement> disable;
-	private boolean validEnable;
-	private boolean validDisable;
 	private Refresh refresh;
 	private boolean isActive;
 	
@@ -26,8 +24,6 @@ public class Context extends Observable {
 		this.contElements = contElements;
 		this.name = name;
 		isActive = false;
-		setValidEnable(false);
-		setValidDisable(false);
 	}
 	
 	public String getName() {
@@ -53,19 +49,11 @@ public class Context extends Observable {
 	public List<Statement> getEnable() {
 		return enable;
 	}
-
-	public boolean getValidEnable() {
-		return validEnable;
-	}
 	
 	public void setEnable(List<Statement> enable) {
 		this.enable = enable;
 	}
 
-	public boolean getValidDisable() {
-		return validDisable;
-	}
-	
 	public List<Statement> getDisable() {
 		return disable;
 	}
@@ -81,22 +69,6 @@ public class Context extends Observable {
 	public void setRefresh(Refresh refresh) {
 		this.refresh = refresh;
 	}
-
-	public boolean isValidEnable() {
-		return validEnable;
-	}
-
-	public void setValidEnable(boolean validEnable) {
-		this.validEnable = validEnable;
-	}
-
-	public boolean isValidDisable() {
-		return validDisable;
-	}
-
-	public void setValidDisable(boolean validDisable) {
-		this.validDisable = validDisable;
-	}
 	
 	public ArrayList<Observer> getObservers() {
 		return observers;
@@ -109,6 +81,26 @@ public class Context extends Observable {
 		 for (Observer ob : observers) {
              ob.update(observable, blocks);
       }
+	}
+
+	public String toString(){
+		StringBuilder elems = new StringBuilder("\nCONTEXT ELEMENTS:");
+		for(ContextElement e: contElements){
+			elems.append("\n");
+			elems.append(e.toString());
+		}
+		return "CONTEXT " + name + elems;
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o == null)
+			return false;
+		if(!(o instanceof Context))
+			return false;
+		Context ctx = (Context) o; 
+		//to do
+		return true;
 	}
 
 }

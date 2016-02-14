@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.dei.perla.cdt.*;
 
@@ -91,7 +93,7 @@ public final class CDTParser implements CDTParserConstants {
       ;
     }
     if (jj_2_1(2)) {
-      att = CreateAttribute(ctx);
+      att = CreateAttribute(ctx, father);
           {if (true) return new Dimension(name, father, att);}
     } else if (jj_2_2(2)) {
       concepts = CreateConcepts(ctx, atts);
@@ -112,17 +114,30 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public CreateAttr CreateAttribute(ParserContext ctx) throws ParseException {
+  final public CreateAttr CreateAttribute(ParserContext ctx, String src) throws ParseException {
         String id;
         String evaluatedOn;
     jj_consume_token(KEYWORD_CREATE);
     jj_consume_token(KEYWORD_ATTRIBUTE);
     jj_consume_token(KEYWORD_DOLLAR);
     id = Identifier();
-    jj_consume_token(KEYWORD_EVALUATED);
-    jj_consume_token(KEYWORD_ON);
-    evaluatedOn = ConstantString();
-    {if (true) return CreateAttr.create(id, evaluatedOn, ctx, id);}
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case KEYWORD_EVALUATED:
+      jj_consume_token(KEYWORD_EVALUATED);
+      jj_consume_token(KEYWORD_ON);
+      evaluatedOn = ConstantString();
+          {if (true) return CreateAttr.createWithQuery(id, evaluatedOn, ctx, src);}
+      break;
+    case KEYWORD_AS:
+      jj_consume_token(KEYWORD_AS);
+      evaluatedOn = Method();
+          {if (true) return CreateAttr.createWithMethod(id, evaluatedOn, ctx, src);}
+      break;
+    default:
+      jj_la1[2] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
     throw new Error("Missing return statement in function");
   }
 
@@ -160,10 +175,10 @@ public final class CDTParser implements CDTParserConstants {
   ExpressionAST when = ConstantAST.TRUE;
   List<CreateAttr> subAtts = Collections.emptyList();
   Set<String> ids = new TreeSet<String>();
-  PartialComponent enable = null;
-  PartialComponent disable = null;
+  PartialComponent enable = PartialComponent.EMPTY;
+  PartialComponent disable = PartialComponent.EMPTY;
   Refresh refresh = Refresh.NEVER;
-  List<String> whenAttr = new ArrayList<String>();
+  Map<String, DataType> whenAttr = new HashMap<String, DataType>();
     jj_consume_token(KEYWORD_CREATE);
     jj_consume_token(KEYWORD_CONCEPT);
     name = Identifier();
@@ -173,7 +188,7 @@ public final class CDTParser implements CDTParserConstants {
       when = Expression(ExpressionType.SIMPLE, "when clause", ctx, whenAttr);
       break;
     default:
-      jj_la1[2] = jj_gen;
+      jj_la1[3] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -183,7 +198,7 @@ public final class CDTParser implements CDTParserConstants {
       whenEvaluated = ConstantString();
       break;
     default:
-      jj_la1[3] = jj_gen;
+      jj_la1[4] = jj_gen;
       ;
     }
     cond = WhenCondition.create(whenAttr, when, whenEvaluated, ctx, name);
@@ -218,7 +233,7 @@ public final class CDTParser implements CDTParserConstants {
     jj_consume_token(KEYWORD_COMPONENT);
     jj_consume_token(KEYWORD_COLON);
     enable = ConstantString();
-          {if (true) return PartialComponent.create(enable, ctx, concept);}
+          {if (true) return PartialComponent.createEnable(enable, ctx, concept);}
     throw new Error("Missing return statement in function");
   }
 
@@ -229,7 +244,7 @@ public final class CDTParser implements CDTParserConstants {
     jj_consume_token(KEYWORD_COMPONENT);
     jj_consume_token(KEYWORD_COLON);
     disable = ConstantString();
-    {if (true) return PartialComponent.create(disable, ctx, concept);}
+    {if (true) return PartialComponent.createDisable(disable, ctx, concept);}
     throw new Error("Missing return statement in function");
   }
 
@@ -241,17 +256,17 @@ public final class CDTParser implements CDTParserConstants {
     jj_consume_token(KEYWORD_REFRESH);
     jj_consume_token(KEYWORD_COMPONENT);
     t = jj_consume_token(KEYWORD_COLON);
-    value = Expression(ExpressionType.CONSTANT, "refresh", ctx, new ArrayList<String>());
+    value = Expression(ExpressionType.CONSTANT, "refresh", ctx, Collections.emptyMap());
     unit = TimeUnit();
      RefreshAST ref = new RefreshAST(t, value, unit);
      {if (true) return ref.compile(ctx);}
     throw new Error("Missing return statement in function");
   }
 
-  final public List<CreateAttr> AddConceptAttributes(ParserContext ctx, Set<String> atts, String src) throws ParseException {
+  final public List<CreateAttr> AddConceptAttributes(ParserContext ctx, Set<String> atts, String conceptName) throws ParseException {
   List<CreateAttr> exps = new ArrayList<CreateAttr>();
   CreateAttr e;
-    e = AddConceptAttribute(ctx, atts, src);
+    e = AddConceptAttribute(ctx, atts, conceptName);
       exps.add(e);
     label_3:
     while (true) {
@@ -260,14 +275,14 @@ public final class CDTParser implements CDTParserConstants {
       } else {
         break label_3;
       }
-      e = AddConceptAttribute(ctx, atts, src);
+      e = AddConceptAttribute(ctx, atts, conceptName);
            exps.add(e);
     }
       {if (true) return exps;}
     throw new Error("Missing return statement in function");
   }
 
-  final public CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String src) throws ParseException {
+  final public CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String conceptName) throws ParseException {
   String id;
   String evaluatedOn;
     jj_consume_token(KEYWORD_CREATE);
@@ -275,15 +290,28 @@ public final class CDTParser implements CDTParserConstants {
     jj_consume_token(KEYWORD_DOLLAR);
     id = Identifier();
     if(atts.contains(id)){
-      ctx.addError("Duplicate attribute " + id + " in concept " + src);
+      ctx.addError("Duplicate attribute " + id + " in concept " + conceptName);
         } else
         {
         atts.add(id);
         }
-    jj_consume_token(KEYWORD_EVALUATED);
-    jj_consume_token(KEYWORD_ON);
-    evaluatedOn = ConstantString();
-    {if (true) return CreateAttr.create(id, evaluatedOn, ctx, id);}
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case KEYWORD_EVALUATED:
+      jj_consume_token(KEYWORD_EVALUATED);
+      jj_consume_token(KEYWORD_ON);
+      evaluatedOn = ConstantString();
+          {if (true) return CreateAttr.createWithQuery(id, evaluatedOn, ctx, conceptName);}
+      break;
+    case KEYWORD_AS:
+      jj_consume_token(KEYWORD_AS);
+      evaluatedOn = Method();
+          {if (true) return CreateAttr.createWithMethod(id, evaluatedOn, ctx, conceptName);}
+      break;
+    default:
+      jj_la1[5] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
     throw new Error("Missing return statement in function");
   }
 
@@ -301,7 +329,7 @@ public final class CDTParser implements CDTParserConstants {
       {if (true) return Sign.MINUS;}
       break;
     default:
-      jj_la1[4] = jj_gen;
+      jj_la1[6] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -319,7 +347,7 @@ public final class CDTParser implements CDTParserConstants {
           {if (true) return LogicValue.FALSE;}
       break;
     default:
-      jj_la1[5] = jj_gen;
+      jj_la1[7] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -344,7 +372,7 @@ public final class CDTParser implements CDTParserConstants {
           value = Integer.parseInt(token.image.substring(2), 16);
       break;
     default:
-      jj_la1[6] = jj_gen;
+      jj_la1[8] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -366,7 +394,7 @@ public final class CDTParser implements CDTParserConstants {
       jj_consume_token(CONSTANT_DOUBLE_QUOTED_STRING_END);
       break;
     default:
-      jj_la1[7] = jj_gen;
+      jj_la1[9] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -397,7 +425,7 @@ public final class CDTParser implements CDTParserConstants {
           {if (true) return new ConstantAST(token, DataType.FLOAT, value);}
       break;
     default:
-      jj_la1[8] = jj_gen;
+      jj_la1[10] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -431,7 +459,7 @@ public final class CDTParser implements CDTParserConstants {
       {if (true) return ComparisonOperation.NE;}
       break;
     default:
-      jj_la1[9] = jj_gen;
+      jj_la1[11] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -469,7 +497,7 @@ public final class CDTParser implements CDTParserConstants {
       {if (true) return DataType.ANY;}
       break;
     default:
-      jj_la1[10] = jj_gen;
+      jj_la1[12] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -499,7 +527,7 @@ public final class CDTParser implements CDTParserConstants {
       {if (true) return ChronoUnit.DAYS;}
       break;
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[13] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -516,7 +544,7 @@ public final class CDTParser implements CDTParserConstants {
 /*
  * EXPRESSIONS
  */
-  final public ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
 
@@ -529,7 +557,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[12] = jj_gen;
+        jj_la1[14] = jj_gen;
         break label_4;
       }
       t = jj_consume_token(OPERATOR_OR);
@@ -540,7 +568,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
 
@@ -553,7 +581,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[15] = jj_gen;
         break label_5;
       }
       t = jj_consume_token(OPERATOR_AND);
@@ -564,7 +592,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
 
@@ -577,7 +605,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[16] = jj_gen;
         break label_6;
       }
       t = jj_consume_token(OPERATOR_XOR);
@@ -588,7 +616,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e;
     boolean invert = false;
 
@@ -600,7 +628,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[15] = jj_gen;
+        jj_la1[17] = jj_gen;
         break label_7;
       }
       t = jj_consume_token(OPERATOR_NOT);
@@ -614,7 +642,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BooleanPredicate(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST BooleanPredicate(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e;
     e = Comparison(type, src, ctx, whenAttr);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -632,13 +660,13 @@ public final class CDTParser implements CDTParserConstants {
         e = Between(e, type, src, ctx, whenAttr);
         break;
       default:
-        jj_la1[16] = jj_gen;
+        jj_la1[18] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[17] = jj_gen;
+      jj_la1[19] = jj_gen;
       ;
     }
       {if (true) return e;}
@@ -657,7 +685,7 @@ public final class CDTParser implements CDTParserConstants {
           invert = true;
       break;
     default:
-      jj_la1[18] = jj_gen;
+      jj_la1[20] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -678,7 +706,7 @@ public final class CDTParser implements CDTParserConstants {
           is = new IsNullAST(t, e);
       break;
     default:
-      jj_la1[19] = jj_gen;
+      jj_la1[21] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -701,7 +729,7 @@ public final class CDTParser implements CDTParserConstants {
   }
 
   final public ExpressionAST Between(ExpressionAST e, ExpressionType type,
-        String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+        String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST b;
     ExpressionAST min;
     ExpressionAST max;
@@ -715,14 +743,13 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
     ComparisonOperation op;
 
     Token t;
     e1 = BitwiseExpression(type, src, ctx, whenAttr);
-                                                       whenAttr.add(token.image);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case OPERATOR_GREATER:
     case OPERATOR_LESS:
@@ -736,14 +763,14 @@ public final class CDTParser implements CDTParserConstants {
             e1 = new ComparisonAST(t, op, e1, e2);
       break;
     default:
-      jj_la1[20] = jj_gen;
+      jj_la1[22] = jj_gen;
       ;
     }
       {if (true) return e1;}
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
 
@@ -756,7 +783,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[21] = jj_gen;
+        jj_la1[23] = jj_gen;
         break label_8;
       }
       t = jj_consume_token(OPERATOR_BITWISE_OR);
@@ -767,7 +794,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
 
@@ -780,7 +807,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[24] = jj_gen;
         break label_9;
       }
       t = jj_consume_token(OPERATOR_BITWISE_AND);
@@ -791,7 +818,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
 
@@ -804,7 +831,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[23] = jj_gen;
+        jj_la1[25] = jj_gen;
         break label_10;
       }
       t = jj_consume_token(OPERATOR_BITWISE_XOR);
@@ -815,7 +842,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
     BitwiseOperation op;
@@ -830,7 +857,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[24] = jj_gen;
+        jj_la1[26] = jj_gen;
         break label_11;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -843,7 +870,7 @@ public final class CDTParser implements CDTParserConstants {
               op = BitwiseOperation.RSH;
         break;
       default:
-        jj_la1[25] = jj_gen;
+        jj_la1[27] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -854,7 +881,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) throws ParseException {
+  final public ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e;
     boolean not = false;
 
@@ -866,7 +893,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[26] = jj_gen;
+        jj_la1[28] = jj_gen;
         break label_12;
       }
       t = jj_consume_token(OPERATOR_BITWISE_NOT);
@@ -880,7 +907,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
     ArithmeticOperation op;
@@ -895,7 +922,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[27] = jj_gen;
+        jj_la1[29] = jj_gen;
         break label_13;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -908,7 +935,7 @@ public final class CDTParser implements CDTParserConstants {
               op = ArithmeticOperation.SUBTRACTION;
         break;
       default:
-        jj_la1[28] = jj_gen;
+        jj_la1[30] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -919,7 +946,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e1;
     ExpressionAST e2;
     ArithmeticOperation op;
@@ -935,7 +962,7 @@ public final class CDTParser implements CDTParserConstants {
         ;
         break;
       default:
-        jj_la1[29] = jj_gen;
+        jj_la1[31] = jj_gen;
         break label_14;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -952,7 +979,7 @@ public final class CDTParser implements CDTParserConstants {
               op = ArithmeticOperation.MODULO;
         break;
       default:
-        jj_la1[30] = jj_gen;
+        jj_la1[32] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -963,7 +990,7 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e;
     Sign s = Sign.PLUS;
 
@@ -975,7 +1002,7 @@ public final class CDTParser implements CDTParserConstants {
           t = token;
       break;
     default:
-      jj_la1[31] = jj_gen;
+      jj_la1[33] = jj_gen;
       ;
     }
     e = PrimaryExpression(type, src, ctx, whenAttr);
@@ -986,11 +1013,14 @@ public final class CDTParser implements CDTParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) throws ParseException {
+  final public ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e;
-
     Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case METHOD:
+      e = ReflectionMethod(ctx);
+          {if (true) return e;}
+      break;
     case CONSTANT_BOOLEAN_TRUE:
     case CONSTANT_BOOLEAN_FALSE:
     case CONSTANT_INTEGER_10:
@@ -1001,15 +1031,15 @@ public final class CDTParser implements CDTParserConstants {
       e = Constant();
       {if (true) return e;}
       break;
-    case 84:
-      jj_consume_token(84);
+    case 87:
+      jj_consume_token(87);
       e = Expression(type, src, ctx, whenAttr);
           {if (true) return e;}
-      jj_consume_token(85);
+      jj_consume_token(88);
       break;
     case IDENTIFIER:
       t = getToken(1);
-      e = AttributeReference();
+      e = AttributeReference(whenAttr);
         if (type == ExpressionType.CONSTANT) {
             ctx.addError("Only constant expressions are allowed in " + src +
                 " at " + getPosition(t));
@@ -1019,14 +1049,14 @@ public final class CDTParser implements CDTParserConstants {
         }
       break;
     default:
-      jj_la1[32] = jj_gen;
+      jj_la1[34] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
     throw new Error("Missing return statement in function");
   }
 
-  final public AttributeReferenceAST AttributeReference() throws ParseException {
+  final public AttributeReferenceAST AttributeReference(Map<String, DataType> whenAttr) throws ParseException {
     String id;
     DataType type = DataType.ANY;
 
@@ -1039,10 +1069,34 @@ public final class CDTParser implements CDTParserConstants {
       type = Type();
       break;
     default:
-      jj_la1[33] = jj_gen;
+      jj_la1[35] = jj_gen;
       ;
     }
+      whenAttr.put(id, type);
       {if (true) return new AttributeReferenceAST(token, id, type);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public MethodAST ReflectionMethod(ParserContext ctx) throws ParseException {
+        String methodName;
+    methodName = Method();
+          {if (true) return MethodAST.create(methodName, ctx);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String Method() throws ParseException {
+    Token value;
+    value = jj_consume_token(METHOD);
+      {if (true) return value.image;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String RemoveDimension() throws ParseException {
+  String dimension;
+    jj_consume_token(KEYWORD_REMOVE);
+    jj_consume_token(KEYWORD_DIMENSION);
+    dimension = Identifier();
+    {if (true) return dimension;}
     throw new Error("Missing return statement in function");
   }
 
@@ -1102,38 +1156,6 @@ public final class CDTParser implements CDTParserConstants {
     finally { jj_save(7, xla); }
   }
 
-  private boolean jj_3R_16() {
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
-  private boolean jj_3_7() {
-    if (jj_3R_21()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_22() {
-    if (jj_scan_token(KEYWORD_CREATE)) return true;
-    if (jj_scan_token(KEYWORD_ATTRIBUTE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_19() {
-    if (jj_scan_token(KEYWORD_WITH)) return true;
-    if (jj_scan_token(KEYWORD_DISABLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3_6() {
-    if (jj_3R_20()) return true;
-    return false;
-  }
-
   private boolean jj_3R_20() {
     if (jj_scan_token(KEYWORD_WITH)) return true;
     if (jj_scan_token(KEYWORD_REFRESH)) return true;
@@ -1177,6 +1199,11 @@ public final class CDTParser implements CDTParserConstants {
     return false;
   }
 
+  private boolean jj_3R_16() {
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
   private boolean jj_3_2() {
     if (jj_3R_16()) return true;
     return false;
@@ -1185,6 +1212,33 @@ public final class CDTParser implements CDTParserConstants {
   private boolean jj_3R_15() {
     if (jj_scan_token(KEYWORD_CREATE)) return true;
     if (jj_scan_token(KEYWORD_ATTRIBUTE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_7() {
+    if (jj_3R_21()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_22() {
+    if (jj_scan_token(KEYWORD_CREATE)) return true;
+    if (jj_scan_token(KEYWORD_ATTRIBUTE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_19() {
+    if (jj_scan_token(KEYWORD_WITH)) return true;
+    if (jj_scan_token(KEYWORD_DISABLE)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_3R_15()) return true;
+    return false;
+  }
+
+  private boolean jj_3_6() {
+    if (jj_3R_20()) return true;
     return false;
   }
 
@@ -1199,7 +1253,7 @@ public final class CDTParser implements CDTParserConstants {
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[34];
+  final private int[] jj_la1 = new int[36];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1209,13 +1263,13 @@ public final class CDTParser implements CDTParserConstants {
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x100,0x1000,0x800,0x20000,0x80000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe000000,0xe000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x80000000,0x80000000,0x70000000,0x70000000,0x80000000,0x0,0x1000000,};
+      jj_la1_0 = new int[] {0x100,0x2000,0x40000,0x1000,0x40000,0x40000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1c000000,0x1c000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe0000000,0xe0000000,0x0,0x0,0x2000000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x1f800,0xf8000000,0x7c00000,0x10,0x8,0x4,0x2,0x0,0x0,0x2,0x0,0x1f800,0x400,0x200,0x100,0xc0,0xc0,0x20,0x1,0x1,0x0,0x0,0x1,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x3,0x0,0x0,0x0,0x0,0x3f000,0xf0000000,0xf800000,0x20,0x10,0x8,0x4,0x0,0x0,0x4,0x0,0x3f000,0x800,0x400,0x200,0x180,0x180,0x40,0x3,0x3,0x0,0x0,0x3,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x18,0xc0,0x600,0x7d8,0x0,0x3,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3c,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1807d8,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x8,0x0,0x0,0x8,0x0,0x60,0x300,0x1800,0x1f60,0x0,0x7,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xf0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe01f60,0x0,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[8];
   private boolean jj_rescan = false;
@@ -1232,7 +1286,7 @@ public final class CDTParser implements CDTParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 34; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1247,7 +1301,7 @@ public final class CDTParser implements CDTParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 34; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1258,7 +1312,7 @@ public final class CDTParser implements CDTParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 34; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1269,7 +1323,7 @@ public final class CDTParser implements CDTParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 34; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1279,7 +1333,7 @@ public final class CDTParser implements CDTParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 34; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1289,7 +1343,7 @@ public final class CDTParser implements CDTParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 34; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 36; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1401,12 +1455,12 @@ public final class CDTParser implements CDTParserConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[86];
+    boolean[] la1tokens = new boolean[89];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 34; i++) {
+    for (int i = 0; i < 36; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -1421,7 +1475,7 @@ public final class CDTParser implements CDTParserConstants {
         }
       }
     }
-    for (int i = 0; i < 86; i++) {
+    for (int i = 0; i < 89; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

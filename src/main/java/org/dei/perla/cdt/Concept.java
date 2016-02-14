@@ -9,7 +9,7 @@ import org.dei.perla.lang.query.statement.Refresh;
 
 public class Concept extends Node{
 	
-	private final List<CreateAttr> atts; //names of the attributes, could be not complete
+	private final List<CreateAttr> atts; 
 	private final WhenCondition when;
 	private final PartialComponent enable;
 	private final PartialComponent disable;
@@ -29,11 +29,8 @@ public class Concept extends Node{
 	}
 	
 	public List<CreateAttr> getAttributes() {
-		if(atts.isEmpty()) {
-			throw new RuntimeException(
-                    "Concept " + name + " has not attributes" );
-		}
-		return atts;		}
+		return atts;		
+	}
 	
 	public WhenCondition getWhen() {
 		return when;
@@ -64,7 +61,7 @@ public class Concept extends Node{
 	public CreateAttr getAttribute(String name){
 		int index = hasAttribute(name);
 		if(index == -1)
-			return null;
+			return CreateAttr.EMPTY;
 		else 
 			return atts.get(index);
 	}

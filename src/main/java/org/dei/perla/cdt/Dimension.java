@@ -8,9 +8,8 @@ public class Dimension extends Node{
 	
 	private final String father;
 	private final CreateAttr att;
-	private final List<Concept> concepts;
-	private Concept corrValue;
-	private String correntValue;
+	private List<Concept> concepts;
+
 	
 	public Dimension(String name, String father, CreateAttr att){
 		super(name);
@@ -39,6 +38,38 @@ public class Dimension extends Node{
 		return concepts;
 	}
 	
+	public void addConcept(Concept child){
+		concepts.add(child);
+	}
+	
+	public void removeConcept(Concept child){
+		concepts.add(child);
+	}
+	
+	public void removeConceptByName(String conceptName){
+		int index = findIndexConcept(conceptName);
+		if(index >= 0)
+			concepts.remove(index);
+		else
+			System.out.println("The dimension has not the concept " + conceptName);
+	}
+	
+	public Concept getConceptContainingAtt(String attribute){
+		for(Concept c: concepts){
+			if(c.getAttribute(attribute)!= CreateAttr.EMPTY)
+				return c;
+		}
+		return null;
+	}
+	
+	private int findIndexConcept(String conceptName){
+		for(int i=0; i < concepts.size(); i++){
+			if(concepts.get(i).getName().equals(conceptName))
+				return i;
+		}
+		return -1;
+	}
+	
 	public String toString(){
 		String children = new String();
 		if(att != null) {
@@ -55,30 +86,5 @@ public class Dimension extends Node{
 		return "DIMENSION " + name + " CHILD OF " + father + children;
 	}
 
-	public Concept getCorrValue() {
-		return corrValue;
-	}
-
-	public String getCorrentValue() {
-		return correntValue;
-	}
-
-	public void setCorrentValue(String correntValue) {
-		Concept c = CDTUtils.getConcept(name, correntValue);
-		if(!concepts.contains(c))
-			throw new RuntimeException(
-                    "Dimension " + name + " has not the Concept " + correntValue);
-		this.correntValue = correntValue;
-	}
-	
-	/*
-	 * setta il valore corrente di una domensione
-	 */
-	public void setCorrValue(Concept correntValue) {
-		if(!concepts.contains(correntValue))
-			throw new RuntimeException(
-                    "Dimension " + name + " has not the Concept " + correntValue.getName() );
-		this.corrValue = correntValue;
-	}
 
 }

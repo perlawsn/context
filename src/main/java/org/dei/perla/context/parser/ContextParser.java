@@ -13,30 +13,24 @@ import org.dei.perla.lang.query.expression.Expression;
 
 public class ContextParser {
 
-	public Context parse(String text) throws ParseException  {
+	public Context create(String text) throws ParseException  {
         ParserContext ctx = new ParserContext();
         Context context;
         ContParser p = new ContParser(new StringReader(text));
         try {
-            context = p.Context(ctx);
+            context = p.CreateContext(ctx);
         } catch(ParseException e) {
             throw new ParseException("Syntax error: " + ctx.getErrorDescription());
         }
         if (ctx.getErrorCount() > 0) {
             throw new ParseException(ctx.getErrorDescription());
         }
-        for(ContextElement c: context.getContextElements()){
-        	if(c instanceof ContextElemAtt){
-        		ContextElemAtt elem = (ContextElemAtt) c;
-        		ParserContext ctx1 = new ParserContext();
-        		Expression exp = elem.getExpressionAST().compile(DataType.ANY, ctx1, new AttributeOrder());
-                if(ctx.hasErrors()){
-                	throw new ParseException(ctx1.getErrorDescription());
-                }
-                else
-                	elem.setExpression(exp);
-        	}
-        }
         return context;
     }
+	
+	public String removeContext(String text) throws ParseException {
+		ContParser p = new ContParser(new StringReader(text));
+		return p.RemoveContext();
+    }
+	
 }

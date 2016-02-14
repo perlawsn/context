@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.dei.perla.context.ComposeBlock;
+import org.dei.perla.context.ComposerManager;
 import org.dei.perla.core.fpc.Attribute;
 import org.dei.perla.core.fpc.DataType;
 import org.dei.perla.lang.parser.ParserContext;
@@ -50,7 +50,7 @@ public class ExecCondTest {
                 RefreshAST.NEVER
         );
         List<ExecutionConditionsAST> ec = Arrays.asList(new ExecutionConditionsAST[]{test1, test2, test3});
-        ComposeBlock cBlock = new ComposeBlock();
+        ComposerManager cBlock = new ComposerManager();
         ExecutionConditionsAST result = cBlock.composeExecCond(ec, ctx);
         assertThat(result.getRefresh().getType(), equalTo(RefreshType.TIME));
         assertThat(result.getRefresh().getDurationValue(), equalTo(c));
@@ -78,7 +78,7 @@ public class ExecCondTest {
                 RefreshAST.NEVER
         );
         List<ExecutionConditionsAST> ec = Arrays.asList(new ExecutionConditionsAST[]{test1, test2, test3});
-        ComposeBlock cBlock = new ComposeBlock();
+        ComposerManager cBlock = new ComposerManager();
         cBlock.composeExecCond(ec, ctx);
         assertTrue(ctx.hasErrors());
 	}
@@ -103,7 +103,7 @@ public class ExecCondTest {
                 new RefreshAST(events)
         );
         List<ExecutionConditionsAST> ec = Arrays.asList(new ExecutionConditionsAST[]{test1, test2});
-        ComposeBlock cBlock = new ComposeBlock();
+        ComposerManager cBlock = new ComposerManager();
         ExecutionConditionsAST e = cBlock.composeExecCond(ec, ctx);
         assertTrue(e.getSpecifications().getSpecifications().contains(temp));
         assertTrue(e.getSpecifications().getSpecifications().contains(press));

@@ -1,20 +1,17 @@
 package org.dei.perla.context;
 
 
+
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import org.dei.perla.cdt.CDT;
-import org.dei.perla.cdt.CreateAttr;
-import org.dei.perla.cdt.Dimension;
 import org.dei.perla.lang.query.expression.Expression;
 import org.dei.perla.lang.query.expression.LogicValue;
 
 public class RefreshContext {
 	
-	private final CDT cdt = CDT.getCDT();
 	private final ScheduledExecutorService scheduler;
 	private final Context context;
 	private ScheduledFuture<?> timer;
@@ -23,11 +20,13 @@ public class RefreshContext {
     private static final int RUNNING = 1;
     
     private int status;
+	private Map<String, Object> cache;
 	
-	public RefreshContext(Context context){
+	public RefreshContext(Context context, Map<String, Object> cache){
 		this.context = context;
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		status = STOPPED;
+		this.cache = cache;
 	}
 	
 	public void checkActiveContext(){
@@ -59,41 +58,34 @@ public class RefreshContext {
             timer = null;
         }
         scheduler.shutdown();
-    }
-	
+    }	
 	
     private final class CheckCondition implements Runnable {
     	
         public void run() {
         	boolean isActive = true;
         	for(ContextElement element: context.getContextElements()){
-        		if(element instanceof ContextElemSimple){
-        			ContextElemSimple simple = (ContextElemSimple) element;
-        			Dimension d = cdt.getDimByName(simple.getDimension());
-        			if(d.getCorrentValue()!=simple.getValue()){
-        				isActive = false;
-        				break;
-        			}
-        		}
-        		else if(element instanceof ContextElemAtt){
-        			ContextElemAtt attElem = (ContextElemAtt) element;
-        			Dimension d = cdt.getDimByName(attElem.getDimension());
-        		    Expression e = attElem.getExpression();
-     	            LogicValue v = (LogicValue) e.run(attElem.getSample(), null);
-     	            CreateAttr att = cdt.getAttributeOfDim(d.getName(), attElem.getAttribute());
-     	            if (v.toBoolean()) {
-     	                att.setCurrentValue(true); 
-     	            } else {
-     	            	att.setCurrentValue(false);
-     	            	isActive = false;
-     	            	break;
-     	            }
-        		}
-        	}
+			if(element instanceof ContextElemSimple){
+				ContextElemSimple ces = (ContextElemSimple) element;
+				if(!ces.getDimension().equals(cache.get(ces.getDimension()))){
+					isActive = false;
+					break;
+				}
+			} else if(element instanceof ContextElemAtt){
+				ContextElemAtt cea = (ContextElemAtt) element;
+				String dimAttName = cea.getDimension() + "." + cea.getAttribute();
+				Object currentValue = cache.get(dimAttName); //valore corrente 
+    			Expression e = cea.getExpression();
+    			LogicValue v = (LogicValue) e.run(new Object[] {currentValue}, null);
+ 	            if (!v.toBoolean()) {
+ 	            	isActive = false;
+ 	            	break;
+ 	            }
+			}
         	if((context.isActive() && !isActive) || (!context.isActive() && isActive))
         		context.setActive(isActive);
+        	}
         }
-
     }
-    
 }
+

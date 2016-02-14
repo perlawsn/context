@@ -1,5 +1,6 @@
 package org.dei.perla.context;
 
+import org.dei.perla.cdt.CDTUtils;
 import org.dei.perla.lang.parser.ParserContext;
 
 public class ContextElemSimple implements ContextElement{
@@ -21,11 +22,23 @@ public class ContextElemSimple implements ContextElement{
 	}
 	
 	public static ContextElement create(String dimension, String value, ParserContext ctx){
-		if(!ContextUtils.isDimensionConceptValid(dimension, value))
-			ctx.addError("DIMENSION " + dimension + " does not have the CONCEPT CHILD " + value);
+		if(!CDTUtils.isDimensionConceptValid(dimension, value))
+			ctx.addError("DIMENSION " + dimension + " does not have the CONCEPT " + value);
 		return new ContextElemSimple(dimension, value);
 	}
 	
+	public String toString(){
+		return dimension + " = " + value;
+	}
 	
+	@Override
+	public boolean equals(Object o){
+		if(o == null)
+			return false;
+		if(!(o instanceof ContextElemSimple))
+			return false;
+		ContextElemSimple ces = (ContextElemSimple) o;
+		return dimension.equals(ces.getDimension()) && value.equals(ces.getValue());
+	}
 	
 }

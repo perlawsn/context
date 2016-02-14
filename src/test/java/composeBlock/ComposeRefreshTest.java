@@ -9,8 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.dei.perla.core.fpc.DataType;
-import org.dei.perla.lang.query.expression.Constant;
 import org.dei.perla.lang.query.statement.Refresh;
 import org.junit.Test;
 

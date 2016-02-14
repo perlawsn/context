@@ -82,6 +82,14 @@ TOKEN :
     < KEYWORD_IF:     "IF" >
 }
 
+/*
+ * DROP / CHANGE CONTEXT
+*/
+TOKEN:
+{  < KEYWORD_DROP : "DROP" >
+  |
+  < KEYWORD_ALTER : "ALTER" >
+}
 
 /*
  * MISC TOKENS
@@ -277,7 +285,7 @@ TOKEN :
 /*
  * PRODUCTION
  */
-Context Context(ParserContext ctx):
+Context CreateContext(ParserContext ctx):
 {
     String name;
     List<ContextElement> elements = new ArrayList<ContextElement>();
@@ -491,31 +499,13 @@ ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx) :
     Token t;
 }
 { 
-    e1 = BooleanTerm(type, src, ctx) 
+    e1 = BooleanFactor(type, src, ctx) 
 	
     (
         t = <OPERATOR_OR>
-        e2 = BooleanTerm(type, src, ctx)
+        e2 = BooleanFactor(type, src, ctx)
         { e1 = new BoolAST(t, BoolOperation.OR, e1, e2);
         }
-    )*
-    { return e1; }
-}
-
-ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx) :
-{
-    ExpressionAST e1;
-    ExpressionAST e2;
-
-    Token t;
-}
-{ 
-    e1 = BooleanFactor(type, src, ctx)
-    
-    (
-        t = <OPERATOR_AND>
-        e2 = BooleanFactor(type, src, ctx)
-        { e1 = new BoolAST(t, BoolOperation.AND, e1, e2); }
     )*
     { return e1; }
 }
@@ -904,5 +894,25 @@ DataType Type() :
     { return DataType.ANY; }
 }
 
+String RemoveContext():
+{
+  String name;
+}
+{
+    < KEYWORD_DROP >
+    < KEYWORD_CONTEXT >
+    name = Identifier()
+    { return name; }
+}
 
+String ChangeContext():
+{
+  String name;
+}
+{
+    < KEYWORD_ALTER >
+    < KEYWORD_CONTEXT >
+    name = Identifier()
+    { return name; }
+}
 

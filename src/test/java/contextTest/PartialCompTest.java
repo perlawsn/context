@@ -1,4 +1,4 @@
-import static org.hamcrest.Matchers.equalTo;
+package contextTest;
 import static org.junit.Assert.*;
 
 import java.io.StringReader;
@@ -13,8 +13,6 @@ import org.dei.perla.cdt.parser.ParseException;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.SelectionStatementAST;
 import org.dei.perla.lang.parser.ast.SetStatementAST;
-import org.dei.perla.lang.query.statement.SelectionStatement;
-import org.dei.perla.lang.query.statement.SetStatement;
 import org.junit.Test;
 
 
@@ -24,27 +22,29 @@ public class PartialCompTest {
 	public void enableSelectionTest() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN temperature > 35"
-				 		+ " WITH ENABLE COMPONENT: 'EVERY 1 m SELECT AVG(temp, 1 m)" 
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35"
+				 		+ " WITH ENABLE COMPONENT: \"EVERY 1 m SELECT AVG(temperature:integer, 1 m)" 
 				 		+ " SAMPLING EVERY 5 s "
-				 		+ " EXECUTE IF room = salotto'"));
+				 		+ " EXECUTE IF room = 'salotto' \""));
 		  Set<String> att = new TreeSet<>();
 		  List<Concept> concepts = parser.CreateConcepts(ctx, att);
 		  Concept c = concepts.get(0);
 		  PartialComponent enable = c.getEnableComponent();
 	      assertFalse(ctx.hasErrors());
-	      boolean b = (enable.getStatement() instanceof SelectionStatementAST);
+	      boolean b = (enable.getStatementAST() instanceof SelectionStatementAST);
 	      assertTrue(b);
+	      enable.getStatementAST().compile(ctx);
+	      assertFalse(ctx.hasErrors());
 	}
 	
 	@Test
 	public void enableSetTestFalse() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN temperature > 35"
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35"
 				 		+ " WITH ENABLE COMPONENT: 'SETT alarm = true ON 20'"));
 		  Set<String> att = new TreeSet<>();
-		  List<Concept> concepts = parser.CreateConcepts(ctx, att);
+		  parser.CreateConcepts(ctx, att);
 	      assertTrue(ctx.hasErrors());
 	}
 	
@@ -52,14 +52,25 @@ public class PartialCompTest {
 	public void enableSetTestTrue() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN temperature = pippo "
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35 "
 				 		+ " WITH ENABLE COMPONENT: 'SET alarm = true ON 20'"));
 		  Set<String> att = new TreeSet<>();
 		  List<Concept> concepts = parser.CreateConcepts(ctx, att);
 		  Concept c = concepts.get(0);
 		  PartialComponent enable = c.getEnableComponent();
 	      assertFalse(ctx.hasErrors());
-	      assertTrue(enable.getStatement() instanceof SetStatementAST);
+	      assertTrue(enable.getStatementAST() instanceof SetStatementAST);
+	}
+	
+	@Test
+	public void disableSelect() throws ParseException {
+		 ParserContext ctx = new ParserContext();
+		 CDTParser parser = new CDTParser(new StringReader(""
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35 "
+				 		+ " WITH DISABLE COMPONENT: \"EVERY 1 m SELECT AVG(temperature:integer, 1 m)" 
+				 		+ " SAMPLING EVERY 5 s \""));
+		  parser.CreateConcept(ctx, new TreeSet<>());
+		  assertTrue(ctx.hasErrors());
 	}
 
 }

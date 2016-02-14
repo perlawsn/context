@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.dei.perla.cdt.*;
 
@@ -78,6 +80,8 @@ TOKEN :
     < KEYWORD_CREATE:   "CREATE" >
     |
     < KEYWORD_DIMENSION:       "DIMENSION"     >
+    |
+    < KEYWORD_REMOVE:   "REMOVE" >
 }
 
 /*
@@ -274,6 +278,8 @@ TOKEN :
 TOKEN :
 {
     < TYPE_ANY: "ANY" >
+	|
+	<KEYWORD_AS: "AS" >
 }
 
 /*
@@ -361,6 +367,8 @@ TOKEN :
     < #HEXADECIMAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
     |
     < IDENTIFIER: ( <LITERAL> | <UNDERSCORE>) ( <DIGIT> | <LITERAL> | <UNDERSCORE> )* >
+	|
+	< METHOD: ( <IDENTIFIER> "." <IDENTIFIER> )+ >
 }
 
 
@@ -424,7 +432,7 @@ Dimension CreateDimension(ParserContext ctx):
   [    father = ChildOf(ctx)
   ]
   (    LOOKAHEAD(2)
-   	att = CreateAttribute(ctx)
+   	att = CreateAttribute(ctx, father)
    	{ return new Dimension(name, father, att); }
     |
     LOOKAHEAD(2)
@@ -441,7 +449,7 @@ String ChildOf(ParserContext ctx):
   father = Identifier()
   { return father; }}
 
-CreateAttr CreateAttribute(ParserContext ctx):
+CreateAttr CreateAttribute(ParserContext ctx, String src):
 {	String id;
 	String evaluatedOn;
 }
@@ -450,11 +458,16 @@ CreateAttr CreateAttribute(ParserContext ctx):
   < KEYWORD_ATTRIBUTE >
   < KEYWORD_DOLLAR >
   id = Identifier()
-  
-  < KEYWORD_EVALUATED >
-  < KEYWORD_ON >
-  	evaluatedOn = ConstantString()
-  { return CreateAttr.create(id, evaluatedOn, ctx, id); }}
+  (
+	< KEYWORD_EVALUATED >
+	< KEYWORD_ON >
+		evaluatedOn = ConstantString()
+	{ return CreateAttr.createWithQuery(id, evaluatedOn, ctx, src); }
+	|
+	<KEYWORD_AS> 
+		evaluatedOn = Method()
+	{ return CreateAttr.createWithMethod(id, evaluatedOn, ctx, src); }
+  )}
 
 List<Concept> CreateConcepts(ParserContext ctx, Set<String> atts):
 {
@@ -489,10 +502,10 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
   ExpressionAST when = ConstantAST.TRUE;
   List<CreateAttr> subAtts = Collections.emptyList();
   Set<String> ids = new TreeSet<String>();
-  PartialComponent enable = null;
-  PartialComponent disable = null;
+  PartialComponent enable = PartialComponent.EMPTY;
+  PartialComponent disable = PartialComponent.EMPTY;
   Refresh refresh = Refresh.NEVER;
-  List<String> whenAttr = new ArrayList<String>();}
+  Map<String, DataType> whenAttr = new HashMap<String, DataType>();}
 {
   < KEYWORD_CREATE >
   < KEYWORD_CONCEPT >
@@ -537,7 +550,7 @@ PartialComponent WithEnable(ParserContext ctx, String concept):
   < KEYWORD_COMPONENT >
   < KEYWORD_COLON >
 	enable = ConstantString()
-	{ return PartialComponent.create(enable, ctx, concept); } } 
+	{ return PartialComponent.createEnable(enable, ctx, concept); } } 
 PartialComponent WithDisable(ParserContext ctx, String concept):
 {
   String disable;
@@ -548,7 +561,7 @@ PartialComponent WithDisable(ParserContext ctx, String concept):
   < KEYWORD_COMPONENT >
   < KEYWORD_COLON >
   disable = ConstantString()
-  { return PartialComponent.create(disable, ctx, concept); }
+  { return PartialComponent.createDisable(disable, ctx, concept); }
 }
 
 Refresh WithRefresh(ParserContext ctx):
@@ -562,30 +575,30 @@ Refresh WithRefresh(ParserContext ctx):
   < KEYWORD_REFRESH >
   < KEYWORD_COMPONENT >
   t = < KEYWORD_COLON >
-   value = Expression(ExpressionType.CONSTANT, "refresh", ctx, new ArrayList<String>())
+   value = Expression(ExpressionType.CONSTANT, "refresh", ctx, Collections.emptyMap())
    unit = TimeUnit()
    { RefreshAST ref = new RefreshAST(t, value, unit);
      return ref.compile(ctx);  }
 }
 
 
-List<CreateAttr> AddConceptAttributes(ParserContext ctx, Set<String> atts, String src):
+List<CreateAttr> AddConceptAttributes(ParserContext ctx, Set<String> atts, String conceptName):
 {
   List<CreateAttr> exps = new ArrayList<CreateAttr>();
   CreateAttr e;
 }
 {
-    e = AddConceptAttribute(ctx, atts, src)
+    e = AddConceptAttribute(ctx, atts, conceptName)
     { exps.add(e); }
     (
      LOOKAHEAD(2)
-	 e = AddConceptAttribute(ctx, atts, src)
+	 e = AddConceptAttribute(ctx, atts, conceptName)
 	 { exps.add(e); }
     )*
     { return exps; }
  }
 
-CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String src):
+CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String conceptName):
 {
   String id;
   String evaluatedOn;
@@ -596,14 +609,18 @@ CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String src):
   < KEYWORD_DOLLAR >
   id = Identifier()
   {
-    if(atts.contains(id)){      ctx.addError("Duplicate attribute " + id + " in concept " + src);  	} else  	{
+    if(atts.contains(id)){      ctx.addError("Duplicate attribute " + id + " in concept " + conceptName);  	} else  	{
     	atts.add(id);  	}  }
-  < KEYWORD_EVALUATED >
-  < KEYWORD_ON >
-  	evaluatedOn = ConstantString()
-  { 
-    return CreateAttr.create(id, evaluatedOn, ctx, id); }
-
+  (
+	< KEYWORD_EVALUATED >
+	< KEYWORD_ON >
+		evaluatedOn = ConstantString()
+	{ return CreateAttr.createWithQuery(id, evaluatedOn, ctx, conceptName); }
+	|
+	< KEYWORD_AS >
+	evaluatedOn = Method()
+	{ return CreateAttr.createWithMethod(id, evaluatedOn, ctx, conceptName); }
+	)
 }
 
 /*
@@ -774,7 +791,7 @@ String Identifier() :
 /*
  * EXPRESSIONS
  */
-ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -793,7 +810,7 @@ ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx, Lis
     { return e1; }
 }
 
-ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -810,7 +827,7 @@ ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, Li
     { return e1; }
 }
 
-ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -827,7 +844,7 @@ ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx, 
     { return e1; }
 }
 
-ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e;
     boolean invert = false;
@@ -850,7 +867,7 @@ ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx
     }
 }
 
-ExpressionAST BooleanPredicate(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST BooleanPredicate(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e;
 }
@@ -914,7 +931,7 @@ ExpressionAST Like(ExpressionAST e) :
 }
 
 ExpressionAST Between(ExpressionAST e, ExpressionType type,
-        String src, ParserContext ctx, List<String> whenAttr) :
+        String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST b;
     ExpressionAST min;
@@ -932,7 +949,7 @@ ExpressionAST Between(ExpressionAST e, ExpressionType type,
     }
 }
 
-ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -942,7 +959,7 @@ ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, Lis
 }
 {
   
-    e1 = BitwiseExpression(type, src, ctx, whenAttr) { whenAttr.add(token.image); }
+    e1 = BitwiseExpression(type, src, ctx, whenAttr) //{ whenAttr.add(token.image); }
     [
         op = ComparisonOperation()
         { t = token; }
@@ -954,7 +971,7 @@ ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, Lis
     { return e1; }
 }
 
-ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -971,7 +988,7 @@ ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext c
     { return e1; }
 }
 
-ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -988,7 +1005,7 @@ ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx, Li
     { return e1; }
 }
 
-ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr ) :
+ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr ) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -1005,7 +1022,7 @@ ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx, 
     { return e1; }
 }
 
-ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -1029,7 +1046,7 @@ ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx, L
     { return e1; }
 }
 
-ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx, List<String > whenAttr) :
+ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e;
     boolean not = false;
@@ -1050,7 +1067,7 @@ ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx
     }
 }
 
-ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -1074,7 +1091,7 @@ ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContex
     { return e1; }
 }
 
-ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e1;
     ExpressionAST e2;
@@ -1101,7 +1118,7 @@ ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx,
     { return e1; }
 }
 
-ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e;
     Sign s = Sign.PLUS;
@@ -1122,13 +1139,15 @@ ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ct
     }
 }
 
-ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx, List<String> whenAttr) :
+ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
 {
     ExpressionAST e;
-
     Token t = null;
 }
-{ 
+{   
+	e = ReflectionMethod(ctx)
+	{ return e; }
+	| 
     e = Constant() 
     { return e; }
     |
@@ -1140,7 +1159,7 @@ ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext c
     )
         |
     { t = getToken(1); }
-    e = AttributeReference()
+    e = AttributeReference(whenAttr)
     {
         if (type == ExpressionType.CONSTANT) {
             ctx.addError("Only constant expressions are allowed in " + src +
@@ -1152,7 +1171,7 @@ ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext c
     }
  }
 
-AttributeReferenceAST AttributeReference() :
+AttributeReferenceAST AttributeReference(Map<String, DataType> whenAttr) :
 {
     String id;
     DataType type = DataType.ANY;
@@ -1166,9 +1185,31 @@ AttributeReferenceAST AttributeReference() :
         ":"
         type = Type()
     ]
-    { return new AttributeReferenceAST(token, id, type); }
+    { whenAttr.put(id, type);
+      return new AttributeReferenceAST(token, id, type); }
 }
 
+MethodAST ReflectionMethod(ParserContext ctx) :{
+	String methodName;}
+{
+	methodName = Method()
+	{ return MethodAST.create(methodName, ctx); }
+}
 
+String Method() :
+{
+    Token value;
+}
+{
+    value = <METHOD>
+    { return value.image; }
+}
 
+String RemoveDimension():{
+  String dimension;}
+{
+  < KEYWORD_REMOVE>
+  < KEYWORD_DIMENSION >
+  dimension = Identifier()
+  {    return dimension;  }}
 

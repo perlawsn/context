@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.dei.perla.context.ComposeBlock;
+import org.dei.perla.context.ComposerManager;
 import org.dei.perla.core.fpc.DataType;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.*;
@@ -31,7 +31,7 @@ public class EveryComposeTest {
 		WindowSizeAST tre = new WindowSizeAST(new ConstantAST(3, DataType.INTEGER));
 		WindowSizeAST dieci = new WindowSizeAST(new ConstantAST(10, DataType.INTEGER));
 		List<WindowSizeAST> everyList = Arrays.asList(new WindowSizeAST[]{cinque, tre, dieci});
-		ComposeBlock c = new ComposeBlock();
+		ComposerManager c = new ComposerManager();
 		WindowSizeAST w = c.composeWindowSize(everyList, ctx);
 		assertThat(w.getSamples(), 
 				equalTo(new ConstantAST(3, DataType.INTEGER)));
@@ -45,7 +45,7 @@ public class EveryComposeTest {
 		WindowSizeAST dieci_minuti = new WindowSizeAST(new ConstantAST(10, DataType.INTEGER), ChronoUnit.MINUTES);
 		List<WindowSizeAST> everyList = Arrays.asList(new WindowSizeAST[]
 				{cinque_days, tre_ore, dieci_minuti});
-		ComposeBlock c = new ComposeBlock();
+		ComposerManager c = new ComposerManager();
 		assertThat(c.composeWindowSize(everyList, ctx), equalTo(dieci_minuti));
 	}
 	
@@ -57,14 +57,14 @@ public class EveryComposeTest {
 		WindowSizeAST one = WindowSizeAST.ONE;
 		List<WindowSizeAST> everyList = Arrays.asList(new WindowSizeAST[]
 				{cinque_days, tre_ore, one});
-		ComposeBlock c = new ComposeBlock();
+		ComposerManager c = new ComposerManager();
 		c.composeWindowSize(everyList, ctx);
 		assertTrue(ctx.hasErrors());
 	}
 	
 	@Test
 	public void everyListIsEmptyTest(){
-		ComposeBlock c = new ComposeBlock();
+		ComposerManager c = new ComposerManager();
 		assertThat(c.composeWindowSize(Collections.emptyList(), new ParserContext()), equalTo(WindowSizeAST.ONE));
 	}
 	

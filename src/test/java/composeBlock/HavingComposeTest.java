@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.dei.perla.context.ComposeBlock;
+import org.dei.perla.context.ComposerManager;
 import org.dei.perla.core.fpc.DataType;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.BoolAST;
@@ -31,14 +31,14 @@ public class HavingComposeTest {
 				new ConstantAST(5, DataType.INTEGER), new ConstantAST(3, DataType.INTEGER));
 		ExpressionAST three = new NotAST(trueExp);
 		List<ExpressionAST> havingList = Arrays.asList(new ExpressionAST[]{one, two, three});
-		ComposeBlock c = new ComposeBlock();
+		ComposerManager c = new ComposerManager();
 		BoolAST e = (BoolAST) c.composeHaving(havingList, ctx);
 		assertThat(e.getRightOperand(), equalTo(three));
 	}
 	
 	@Test
 	public void everyListIsEmptyTest(){
-		ComposeBlock c = new ComposeBlock();
+		ComposerManager c = new ComposerManager();
 		assertThat(c.composeHaving(Collections.emptyList(), new ParserContext()), equalTo(ConstantAST.TRUE));
 	}
 }

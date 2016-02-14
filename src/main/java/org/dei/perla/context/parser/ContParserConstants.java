@@ -21,103 +21,107 @@ public interface ContParserConstants {
   /** RegularExpression Id. */
   int KEYWORD_IF = 12;
   /** RegularExpression Id. */
-  int KEYWORD_IS = 13;
+  int KEYWORD_DROP = 13;
   /** RegularExpression Id. */
-  int KEYWORD_BETWEEN = 14;
+  int KEYWORD_ALTER = 14;
   /** RegularExpression Id. */
-  int KEYWORD_LIKE = 15;
+  int KEYWORD_IS = 15;
   /** RegularExpression Id. */
-  int OPERATOR_MULTIPLY = 16;
+  int KEYWORD_BETWEEN = 16;
   /** RegularExpression Id. */
-  int OPERATOR_DIVIDE = 17;
+  int KEYWORD_LIKE = 17;
   /** RegularExpression Id. */
-  int OPERATOR_MODULO = 18;
+  int OPERATOR_MULTIPLY = 18;
   /** RegularExpression Id. */
-  int OPERATOR_PLUS = 19;
+  int OPERATOR_DIVIDE = 19;
   /** RegularExpression Id. */
-  int OPERATOR_MINUS = 20;
+  int OPERATOR_MODULO = 20;
   /** RegularExpression Id. */
-  int OPERATOR_NOT = 21;
+  int OPERATOR_PLUS = 21;
   /** RegularExpression Id. */
-  int OPERATOR_XOR = 22;
+  int OPERATOR_MINUS = 22;
   /** RegularExpression Id. */
-  int OPERATOR_AND = 23;
+  int OPERATOR_NOT = 23;
   /** RegularExpression Id. */
-  int OPERATOR_OR = 24;
+  int OPERATOR_XOR = 24;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_NOT = 25;
+  int OPERATOR_AND = 25;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_LSH = 26;
+  int OPERATOR_OR = 26;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_RSH = 27;
+  int OPERATOR_BITWISE_NOT = 27;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_XOR = 28;
+  int OPERATOR_BITWISE_LSH = 28;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_AND = 29;
+  int OPERATOR_BITWISE_RSH = 29;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_OR = 30;
+  int OPERATOR_BITWISE_XOR = 30;
   /** RegularExpression Id. */
-  int OPERATOR_GREATER = 31;
+  int OPERATOR_BITWISE_AND = 31;
   /** RegularExpression Id. */
-  int OPERATOR_LESS = 32;
+  int OPERATOR_BITWISE_OR = 32;
   /** RegularExpression Id. */
-  int OPERATOR_GREATER_EQUAL = 33;
+  int OPERATOR_GREATER = 33;
   /** RegularExpression Id. */
-  int OPERATOR_LESS_EQUAL = 34;
+  int OPERATOR_LESS = 34;
   /** RegularExpression Id. */
-  int OPERATOR_EQUAL = 35;
+  int OPERATOR_GREATER_EQUAL = 35;
   /** RegularExpression Id. */
-  int OPERATOR_NOT_EQUAL = 36;
+  int OPERATOR_LESS_EQUAL = 36;
   /** RegularExpression Id. */
-  int TYPE_ID = 37;
+  int OPERATOR_EQUAL = 37;
   /** RegularExpression Id. */
-  int TYPE_TIMESTAMP = 38;
+  int OPERATOR_NOT_EQUAL = 38;
   /** RegularExpression Id. */
-  int TYPE_BOOLEAN = 39;
+  int TYPE_ID = 39;
   /** RegularExpression Id. */
-  int TYPE_INTEGER = 40;
+  int TYPE_TIMESTAMP = 40;
   /** RegularExpression Id. */
-  int TYPE_FLOAT = 41;
+  int TYPE_BOOLEAN = 41;
   /** RegularExpression Id. */
-  int TYPE_STRING = 42;
+  int TYPE_INTEGER = 42;
   /** RegularExpression Id. */
-  int TYPE_ANY = 43;
+  int TYPE_FLOAT = 43;
   /** RegularExpression Id. */
-  int CONSTANT_NULL = 44;
+  int TYPE_STRING = 44;
   /** RegularExpression Id. */
-  int CONSTANT_BOOLEAN_TRUE = 45;
+  int TYPE_ANY = 45;
   /** RegularExpression Id. */
-  int CONSTANT_BOOLEAN_FALSE = 46;
+  int CONSTANT_NULL = 46;
   /** RegularExpression Id. */
-  int CONSTANT_BOOLEAN_UNKNOWN = 47;
+  int CONSTANT_BOOLEAN_TRUE = 47;
   /** RegularExpression Id. */
-  int CONSTANT_INTEGER_10 = 48;
+  int CONSTANT_BOOLEAN_FALSE = 48;
   /** RegularExpression Id. */
-  int CONSTANT_INTEGER_16 = 49;
+  int CONSTANT_BOOLEAN_UNKNOWN = 49;
   /** RegularExpression Id. */
-  int CONSTANT_FLOAT = 50;
+  int CONSTANT_INTEGER_10 = 50;
   /** RegularExpression Id. */
-  int CONSTANT_SINGLE_QUOTED_STRING_START = 51;
+  int CONSTANT_INTEGER_16 = 51;
   /** RegularExpression Id. */
-  int CONSTANT_DOUBLE_QUOTED_STRING_START = 52;
+  int CONSTANT_FLOAT = 52;
   /** RegularExpression Id. */
-  int CONSTANT_SINGLE_QUOTED_STRING_VALUE = 53;
+  int CONSTANT_SINGLE_QUOTED_STRING_START = 53;
   /** RegularExpression Id. */
-  int CONSTANT_DOUBLE_QUOTED_STRING_VALUE = 54;
+  int CONSTANT_DOUBLE_QUOTED_STRING_START = 54;
   /** RegularExpression Id. */
-  int CONSTANT_SINGLE_QUOTED_STRING_END = 55;
+  int CONSTANT_SINGLE_QUOTED_STRING_VALUE = 55;
   /** RegularExpression Id. */
-  int CONSTANT_DOUBLE_QUOTED_STRING_END = 56;
+  int CONSTANT_DOUBLE_QUOTED_STRING_VALUE = 56;
   /** RegularExpression Id. */
-  int DIGIT = 57;
+  int CONSTANT_SINGLE_QUOTED_STRING_END = 57;
   /** RegularExpression Id. */
-  int LITERAL = 58;
+  int CONSTANT_DOUBLE_QUOTED_STRING_END = 58;
   /** RegularExpression Id. */
-  int UNDERSCORE = 59;
+  int DIGIT = 59;
   /** RegularExpression Id. */
-  int HEXADECIMAL = 60;
+  int LITERAL = 60;
   /** RegularExpression Id. */
-  int IDENTIFIER = 61;
+  int UNDERSCORE = 61;
+  /** RegularExpression Id. */
+  int HEXADECIMAL = 62;
+  /** RegularExpression Id. */
+  int IDENTIFIER = 63;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -147,6 +151,8 @@ public interface ContParserConstants {
     "\".\"",
     "\"ACTIVE\"",
     "\"IF\"",
+    "\"DROP\"",
+    "\"ALTER\"",
     "\"IS\"",
     "\"BETWEEN\"",
     "\"LIKE\"",

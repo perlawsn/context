@@ -19,6 +19,6 @@ package org.dei.perla.cdt;
  */
 public interface EvaluatedOn {
 	
-	public String getEvaluatedOn();
+	public String getStringEvaluatedOn();
 
 }

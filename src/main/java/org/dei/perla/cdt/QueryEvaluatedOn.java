@@ -7,39 +7,49 @@ import org.dei.perla.lang.parser.ParserAST;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.SelectionStatementAST;
 import org.dei.perla.lang.parser.ast.StatementAST;
+import org.dei.perla.lang.query.statement.Statement;
 
 public class QueryEvaluatedOn implements EvaluatedOn{
 	
 	private final String evaluatedOn;
-	public StatementAST ast;
+	public Statement evaluatedOnStat;
 	
-	private QueryEvaluatedOn(String evaluatedOn, StatementAST ast){
+	private QueryEvaluatedOn(String evaluatedOn, Statement evaluatedOnStat){
 		this.evaluatedOn = evaluatedOn;
-		this.ast = ast;
+		this.evaluatedOnStat = evaluatedOnStat;
 	}
 
 	@Override
-	public String getEvaluatedOn() {
+	public String getStringEvaluatedOn() {
 		return evaluatedOn;
 	}
 	
-	public StatementAST getQueryEvaluatedOn(){
-		return ast;
+	public Statement getQueryEvaluatedOn(){
+		return evaluatedOnStat;
 	}
 
 	
-	public static QueryEvaluatedOn create(String evaluatedOn, ParserContext ctx, String src){
-		StatementAST s = null;
+	public static QueryEvaluatedOn create(String attName, String evaluatedOn, ParserContext ctx, String src){
+		StatementAST ast = null;
         ParserAST p = new ParserAST(new StringReader(evaluatedOn));
         try {
-            s = p.Statement(ctx);
+            ast = p.Statement(ctx);
         } catch(ParseException e) {
+        	System.out.println(ctx.getErrorDescription());
             ctx.addError("Parse exception in defining the EVALUATED ON clause "
-            		+ "of ATTRIBUTE " + src);
+            		+ "of ATTRIBUTE " + attName + " OF " + src);
+            return null;
         }
-        if(!(s instanceof SelectionStatementAST))
-        	ctx.addError("Query Perla defined in the EVALUATED ON clause of ATTRIBUTE " + src 
-        			+ " must be a SELECTION STATEMENT");
+        if(!(ast instanceof SelectionStatementAST)) {
+        	ctx.addError("Query Perla defined in the EVALUATED ON clause of ATTRIBUTE " + attName + " OF " 
+        			+ src + " must be a SELECTION STATEMENT");
+        	return null;
+        }
+		ParserContext compilationErrors = new ParserContext();
+		Statement s = ast.compile(compilationErrors);
+		if(compilationErrors.getErrorCount() > 0) {
+            ctx.addError(compilationErrors.getErrorDescription());
+		}
 		return new QueryEvaluatedOn(evaluatedOn, s);
 	}
 

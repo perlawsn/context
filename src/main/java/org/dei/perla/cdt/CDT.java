@@ -28,6 +28,40 @@ public class CDT {
 		return dimensions;
 	}
 	
+	public void addDimension(Dimension dim){
+		if(getDimByName(dim.getName()) == null){
+			dimensions.add(dim);
+		}
+		else 
+			System.out.println("The CDT has already a dimension with the name " + dim.getName());
+	}
+	
+	private int getIndex(String dimensionName) {
+		int index = 0;
+		for(Dimension d: cdt.getDimensions()){
+			if(d.getName().equals(dimensionName))
+				return index;
+			index++;
+		}
+		return -1;
+	}
+	
+	public boolean removeDimensionByName(String dim){
+		int indexDimensionToRemove = getIndex(dim);
+		if(indexDimensionToRemove > 0){
+			dimensions.remove(indexDimensionToRemove);
+			return true;
+		}
+		else {
+			System.out.println("The CDT does not have a DIMENSION with the name " + dim);	
+			return false;
+		}
+	}
+	
+	public boolean removeDimension(Dimension dim){
+		return removeDimensionByName(dim.getName());
+	}
+	
 	public Dimension getDimByName(String name){
 		for(Dimension d: dimensions){
 			if(d.getName().equals(name))
@@ -80,6 +114,7 @@ public class CDT {
 				break;
 			}
 		}
+		if(searchedDim == null) return CreateAttr.EMPTY;
 		CreateAttr attDim = searchedDim.getAttribute();
 		if(attDim.getName().equals(att))
 			return attDim;
@@ -87,7 +122,7 @@ public class CDT {
 		for(Concept c: searchedDim.getConcepts()){
 			return c.getAttribute(att);
 		}
-		return null;
+		return CreateAttr.EMPTY;
 	} 
 	
 	
@@ -109,7 +144,7 @@ public class CDT {
 	}
 	
 	public boolean containsAttributeOfDim(String dim, String att){
-		if(this.getAttributeOfDim(dim, att) == null)
+		if(this.getAttributeOfDim(dim, att) == CreateAttr.EMPTY)
 			return false;
 		else
 			return true;
