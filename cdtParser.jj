@@ -1,0 +1,1215 @@
+options
+{
+    JDK_VERSION = "1.8";
+    IGNORE_CASE = true;
+    STATIC = false;
+}
+
+PARSER_BEGIN(CDTParser)
+package org.dei.perla.cdt.parser;
+
+import java.time.temporal.TemporalUnit;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.dei.perla.cdt.*;
+
+import org.dei.perla.lang.parser.ast.*;
+
+import org.dei.perla.lang.query.expression.*;
+import org.dei.perla.lang.query.statement.*;
+
+import org.dei.perla.core.fpc.DataType;
+import org.dei.perla.core.fpc.Attribute;
+import org.dei.perla.lang.parser.*;
+import org.dei.perla.context.*;
+
+public final class CDTParser {
+
+        private String getPosition(Token t) {
+            return "line " + t.beginLine + ", column " + t.beginColumn;
+        }
+
+    }
+
+PARSER_END(CDTParser)
+
+/*
+ * SEPARATORS
+ */
+SKIP :
+{
+    " "
+    |
+    "\r"
+    |
+    "\t"
+    |
+    "\n"
+}
+
+/*
+ *	COMMENTS
+ */
+MORE:
+{
+    "/*" : COMMENT
+}
+
+<COMMENT> MORE:
+{
+    <~[]>
+}
+
+<COMMENT> SKIP:
+{
+    "*/" : DEFAULT
+}
+
+/*
+ * CREATE DIMENSION
+ */
+TOKEN :
+{
+    < KEYWORD_CREATE:   "CREATE" >
+    |
+    < KEYWORD_DIMENSION:       "DIMENSION"     >
+    |
+    < KEYWORD_REMOVE:   "REMOVE" >
+}
+
+/*
+ * CREATE CONCEPT
+ */
+TOKEN :
+{
+    < KEYWORD_CONCEPT:     "CONCEPT" >
+    |
+    < KEYWORD_WHEN:     "WHEN" >
+}
+
+/*
+ * CHILD OF CLAUSE
+ */
+TOKEN :
+{
+    < KEYWORD_CHILD:        "CHILD"        >
+    |
+    < KEYWORD_OF:           "OF"           >
+}
+
+/*
+ * CREATE ATTRIBUTE 
+ */
+TOKEN :
+{
+    <KEYWORD_ADD:    "ADD" >
+    |
+    <KEYWORD_ATTRIBUTE:    "ATTRIBUTE" >
+    |
+    <KEYWORD_DOLLAR:    "$" >
+}
+
+/*
+ * EVALUATED ON CLAUSE
+ */
+TOKEN :
+{
+    <KEYWORD_EVALUATED:    "EVALUATED" >
+    |
+    <KEYWORD_ON:    "ON" >
+}
+
+/*
+ * WITH ENABLE/DISABLE/REFRESH COMPONENT
+ */
+TOKEN :
+{
+    < KEYWORD_WITH:     "WITH" >
+    | 
+    < KEYWORD_ENABLE:     "ENABLE" >
+    |
+    < KEYWORD_DISABLE:     "DISABLE" >
+    | 
+    < KEYWORD_COMPONENT:     "COMPONENT" >
+    |
+    < KEYWORD_REFRESH:   "REFRESH" >
+    | 
+    < KEYWORD_COLON:     ":" >
+}
+
+/*
+ * MISC TOKENS
+ */
+TOKEN :
+{
+    < KEYWORD_IS:       "IS" >
+    |
+    < KEYWORD_BETWEEN:  "BETWEEN"  >
+    |
+    < KEYWORD_LIKE:     "LIKE"     >
+}
+
+/*
+ * ALGEBRAIC OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_MULTIPLY: "*" >
+    |
+    < OPERATOR_DIVIDE:   "/" >
+    |
+    <OPERATOR_MODULO:    "%" >
+    |
+    < OPERATOR_PLUS:     "+" >
+    |
+    < OPERATOR_MINUS:    "-" >
+}
+
+/*
+ * BOOLEAN OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_NOT:     "NOT" >
+    |
+    < OPERATOR_XOR:     "XOR" >
+    |
+    < OPERATOR_AND:     "AND" >
+    |
+    < OPERATOR_OR:      "OR"  >
+}
+
+/*
+ * BITWISE OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_BITWISE_NOT: "~" >
+    |
+    < OPERATOR_BITWISE_LSH: "<<" >
+    |
+    < OPERATOR_BITWISE_RSH: ">>" >
+    |
+    < OPERATOR_BITWISE_XOR: "^" >
+    |
+    < OPERATOR_BITWISE_AND: "&" >
+    |
+    < OPERATOR_BITWISE_OR:  "|"  >
+}
+
+/*
+ * COMPARISON OPERATORS
+ */
+TOKEN :
+{
+    < OPERATOR_GREATER:       ">"  >
+    |
+    < OPERATOR_LESS:          "<"  >
+    |
+    < OPERATOR_GREATER_EQUAL: ">=" >
+    |
+    < OPERATOR_LESS_EQUAL:    "<=" >
+    |
+    < OPERATOR_EQUAL:         "="  >
+    |
+    < OPERATOR_NOT_EQUAL:     "<>" | "!=" >
+}
+
+/*
+ * AGGREGATES
+ */
+TOKEN :
+{
+    < FUNCTION_COUNT:     "COUNT"     >
+    |
+    < FUNCTION_AVG:       "AVG"       >
+    |
+    < FUNCTION_MAX:       "MAX"       >
+    |
+    < FUNCTION_MIN:       "MIN"       >
+    |
+    < FUNCTION_SUM:       "SUM"       >
+}
+
+/*
+ * TIME UNITS
+ */
+TOKEN :
+{
+    < TIMEUNIT_S:  "seconds"      | "s"  >
+    |
+    < TIMEUNIT_M:  "minutes"      | "m"  >
+    |
+    < TIMEUNIT_H:  "hours"        | "h"  >
+    |
+    < TIMEUNIT_MS: "milliseconds" | "millis" | "ms" >
+    |
+    < TIMEUNIT_D:  "days"         | "d"  >
+}
+
+/*
+ * DATA TYPES
+ */
+TOKEN :
+{
+    < TYPE_ID:             "ID"        >
+    |
+    < TYPE_TIMESTAMP:      "TIMESTAMP" >
+    |
+    < TYPE_BOOLEAN:        "BOOLEAN"   >
+    |
+    < TYPE_INTEGER:        "INTEGER"   >
+    |
+    < TYPE_FLOAT:          "FLOAT"     >
+    |
+    < TYPE_STRING:         "STRING"    >
+}
+
+/*
+ * TYPE CLASS WILDCARDS
+ */
+TOKEN :
+{
+    < TYPE_ANY: "ANY" >
+	|
+	<KEYWORD_AS: "AS" >
+}
+
+/*
+ * COSTANTS
+ * Don't use these tokens, use the corresponding productions instead.
+ */
+
+/*
+ * CONSTANT NULL
+ */
+TOKEN :
+{
+    < CONSTANT_NULL:     "NULL" >
+}
+
+/*
+ * 3-VALUE BOOLEAN LOGIC (true, false, unknown)
+ */
+TOKEN :
+{
+    < CONSTANT_BOOLEAN_TRUE:    "TRUE"    >
+    |
+    < CONSTANT_BOOLEAN_FALSE:   "FALSE"   >
+    |
+    < CONSTANT_BOOLEAN_UNKNOWN: "UNKNOWN" >
+}
+
+/*
+ * NUMERIC CONSTANTS (float and integer)
+ */
+TOKEN :
+{
+    <CONSTANT_INTEGER_10: ( <DIGIT> )+ >
+    |
+    <CONSTANT_INTEGER_16: ( <HEXADECIMAL> ) >
+    |
+    <CONSTANT_FLOAT:
+        ( <CONSTANT_INTEGER_10> )? "." <CONSTANT_INTEGER_10>
+    >
+}
+
+/*
+ * STRING CONSTANTS
+ * Strings can be single quoted or double quoted. The quote character is
+ * escaped when doubled (e.g., 'test '' string' or "test "" string"
+ */
+TOKEN :
+{
+    < CONSTANT_SINGLE_QUOTED_STRING_START: "'"  > : NON_SINGLE_QUOTED_STRING
+    |
+    < CONSTANT_DOUBLE_QUOTED_STRING_START: "\"" > : NON_DOUBLE_QUOTED_STRING
+}
+
+<NON_SINGLE_QUOTED_STRING> TOKEN :
+{
+    < CONSTANT_SINGLE_QUOTED_STRING_VALUE: (~["'"] | "'" "'")* > : NON_SINGLE_QUOTED_STRING_END
+}
+
+<NON_DOUBLE_QUOTED_STRING> TOKEN :
+{
+    < CONSTANT_DOUBLE_QUOTED_STRING_VALUE: (~["\""] | "\"" "\"")* > : NON_DOUBLE_QUOTED_STRING_END
+}
+
+<NON_SINGLE_QUOTED_STRING_END> TOKEN :
+{
+    < CONSTANT_SINGLE_QUOTED_STRING_END:  "'" > : DEFAULT
+}
+
+<NON_DOUBLE_QUOTED_STRING_END> TOKEN :
+{
+    < CONSTANT_DOUBLE_QUOTED_STRING_END: "\"" > : DEFAULT
+}
+
+/*
+ * IDENTIFIERS
+ */
+TOKEN :
+{
+    < #DIGIT:      ["0" - "9"]               >
+    |
+    < #LITERAL:    ["a" - "z", "A" - "Z"] >
+    |
+    < #UNDERSCORE: "_"                       >
+    |
+    < #HEXADECIMAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+    |
+    < IDENTIFIER: ( <LITERAL> | <UNDERSCORE>) ( <DIGIT> | <LITERAL> | <UNDERSCORE> )* >
+	|
+	< METHOD: ( <IDENTIFIER> "." <IDENTIFIER> )+ >
+}
+
+
+/*
+ * PRODUCTIONS
+ */
+
+CDT CDT(ParserContext ctx):
+{
+    CDT cdt = CDT.getCDT();
+    List<Dimension> dimensions = new ArrayList<Dimension>();
+}
+{
+    dimensions = CreateDimensions(ctx)
+    { cdt.setDimensions(dimensions);
+      return cdt; }
+}
+
+List<Dimension> CreateDimensions(ParserContext ctx) :
+{
+    List<Dimension> dims = new ArrayList<Dimension>();
+    Dimension d;
+    Set<String> names = new TreeSet<String>();
+}
+{
+   < KEYWORD_CREATE >
+    d = CreateDimension(ctx)
+    {
+        names.add(d.getName());
+        dims.add(d);
+    }
+    (
+      < KEYWORD_CREATE >
+        d = CreateDimension(ctx)
+        {
+            String n = d.getName();
+            if (names.contains(n)) {
+                ctx.addError("Duplicate dimension name '" + n + "'");
+            } else {
+                names.add(n);
+                dims.add(d);
+            }
+        }
+    )*
+    < EOF >
+    { return dims; }
+}
+
+Dimension CreateDimension(ParserContext ctx):
+{
+  String name;
+  String father = "ROOT";
+  CreateAttr att = null;
+  List<Concept> concepts = new ArrayList<Concept>();
+
+// in this variable all attributes on the concepts on a dimension are stored
+  Set<String> atts = new TreeSet<String>();}
+{
+  < KEYWORD_DIMENSION >
+  name = Identifier()
+  [    father = ChildOf(ctx)
+  ]
+  (    LOOKAHEAD(2)
+   	att = CreateAttribute(ctx, father)
+   	{ return new Dimension(name, father, att); }
+    |
+    LOOKAHEAD(2)
+    concepts = CreateConcepts(ctx, atts)
+    { return new Dimension(name, father, concepts); }
+   )}
+
+String ChildOf(ParserContext ctx):
+{	String father;
+}
+{
+  < KEYWORD_CHILD >
+  < KEYWORD_OF >
+  father = Identifier()
+  { return father; }}
+
+CreateAttr CreateAttribute(ParserContext ctx, String src):
+{	String id;
+	String evaluatedOn;
+}
+{
+  < KEYWORD_CREATE >
+  < KEYWORD_ATTRIBUTE >
+  < KEYWORD_DOLLAR >
+  id = Identifier()
+  (
+	< KEYWORD_EVALUATED >
+	< KEYWORD_ON >
+		evaluatedOn = ConstantString()
+	{ return CreateAttr.createWithQuery(id, evaluatedOn, ctx, src); }
+	|
+	<KEYWORD_AS> 
+		evaluatedOn = Method()
+	{ return CreateAttr.createWithMethod(id, evaluatedOn, ctx, src); }
+  )}
+
+List<Concept> CreateConcepts(ParserContext ctx, Set<String> atts):
+{
+  List<Concept> concepts = new ArrayList<Concept>();
+  Concept c;
+  Set<String> names = new TreeSet<String>();}
+{
+    c = CreateConcept(ctx, atts)
+    {
+      names.add(c.getName());
+      concepts.add(c);    }
+    (
+     LOOKAHEAD(2)
+	 c = CreateConcept(ctx, atts)
+	 {
+         String n = c.getName();
+         if (names.contains(n)) {
+            ctx.addError("Duplicate concept name '" + n + "'");
+         } else {
+           names.add(n);
+           concepts.add(c);
+         }
+      }
+    )*
+    { return concepts; } }
+
+Concept CreateConcept(ParserContext ctx, Set<String> atts):
+{
+  String name;
+  String whenEvaluated = null;
+  WhenCondition cond = null;
+  ExpressionAST when = ConstantAST.TRUE;
+  List<CreateAttr> subAtts = Collections.emptyList();
+  Set<String> ids = new TreeSet<String>();
+  PartialComponent enable = PartialComponent.EMPTY;
+  PartialComponent disable = PartialComponent.EMPTY;
+  Refresh refresh = Refresh.NEVER;
+  Map<String, DataType> whenAttr = new HashMap<String, DataType>();}
+{
+  < KEYWORD_CREATE >
+  < KEYWORD_CONCEPT >
+  name = Identifier()
+  [
+  	< KEYWORD_WHEN >
+  	when = Expression(ExpressionType.SIMPLE, "when clause", ctx, whenAttr)
+  ]
+  [	
+    < KEYWORD_EVALUATED >
+  	< KEYWORD_ON >
+  	whenEvaluated = ConstantString()
+  ]
+  {
+    cond = WhenCondition.create(whenAttr, when, whenEvaluated, ctx, name);  }
+  [
+    LOOKAHEAD(2)
+    enable = WithEnable(ctx, name)
+  ]
+  [
+    LOOKAHEAD(2)
+    disable = WithDisable(ctx, name)
+  ]
+  [
+    LOOKAHEAD(2)
+    refresh = WithRefresh(ctx)
+  ]
+  [
+	LOOKAHEAD(2)
+    subAtts = AddConceptAttributes(ctx, atts, name)
+  ]
+  { return new Concept(name, cond, subAtts, enable, disable, refresh); }}
+
+
+
+PartialComponent WithEnable(ParserContext ctx, String concept):
+{
+  String enable;}
+{
+  < KEYWORD_WITH >
+  < KEYWORD_ENABLE >
+  < KEYWORD_COMPONENT >
+  < KEYWORD_COLON >
+	enable = ConstantString()
+	{ return PartialComponent.createEnable(enable, ctx, concept); } } 
+PartialComponent WithDisable(ParserContext ctx, String concept):
+{
+  String disable;
+}
+{
+  < KEYWORD_WITH >
+  < KEYWORD_DISABLE >
+  < KEYWORD_COMPONENT >
+  < KEYWORD_COLON >
+  disable = ConstantString()
+  { return PartialComponent.createDisable(disable, ctx, concept); }
+}
+
+Refresh WithRefresh(ParserContext ctx):
+{
+    ExpressionAST value;
+    TemporalUnit unit;
+    Token t;
+}
+{
+  < KEYWORD_WITH >
+  < KEYWORD_REFRESH >
+  < KEYWORD_COMPONENT >
+  t = < KEYWORD_COLON >
+   value = Expression(ExpressionType.CONSTANT, "refresh", ctx, Collections.emptyMap())
+   unit = TimeUnit()
+   { RefreshAST ref = new RefreshAST(t, value, unit);
+     return ref.compile(ctx);  }
+}
+
+
+List<CreateAttr> AddConceptAttributes(ParserContext ctx, Set<String> atts, String conceptName):
+{
+  List<CreateAttr> exps = new ArrayList<CreateAttr>();
+  CreateAttr e;
+}
+{
+    e = AddConceptAttribute(ctx, atts, conceptName)
+    { exps.add(e); }
+    (
+     LOOKAHEAD(2)
+	 e = AddConceptAttribute(ctx, atts, conceptName)
+	 { exps.add(e); }
+    )*
+    { return exps; }
+ }
+
+CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String conceptName):
+{
+  String id;
+  String evaluatedOn;
+}
+{
+  < KEYWORD_CREATE >
+  < KEYWORD_ATTRIBUTE >
+  < KEYWORD_DOLLAR >
+  id = Identifier()
+  {
+    if(atts.contains(id)){      ctx.addError("Duplicate attribute " + id + " in concept " + conceptName);  	} else  	{
+    	atts.add(id);  	}  }
+  (
+	< KEYWORD_EVALUATED >
+	< KEYWORD_ON >
+		evaluatedOn = ConstantString()
+	{ return CreateAttr.createWithQuery(id, evaluatedOn, ctx, conceptName); }
+	|
+	< KEYWORD_AS >
+	evaluatedOn = Method()
+	{ return CreateAttr.createWithMethod(id, evaluatedOn, ctx, conceptName); }
+	)
+}
+
+/*
+ * SIGNS, CONSTANTS, VALUES, ETC.
+ */
+Sign Sign() :
+{}
+{
+    <OPERATOR_PLUS>
+    { return Sign.PLUS; }
+    |
+    <OPERATOR_MINUS>
+    { return Sign.MINUS; }
+}
+
+LogicValue ConstantBoolean() :
+{}
+{
+    (
+        <CONSTANT_BOOLEAN_TRUE>
+        { return LogicValue.TRUE; }
+        |
+        <CONSTANT_BOOLEAN_FALSE>
+        { return LogicValue.FALSE; }
+    )
+}
+
+float ConstantFloat() :
+{}
+{
+    <CONSTANT_FLOAT>
+    { return Float.parseFloat(token.image); }
+}
+
+int ConstantInteger() :
+{
+    int value = 0;
+}
+{
+    (
+        <CONSTANT_INTEGER_10>
+        { value = Integer.parseInt(token.image); }
+        |
+        <CONSTANT_INTEGER_16>
+        { value = Integer.parseInt(token.image.substring(2), 16); }
+    )
+    { return value; }
+}
+
+String ConstantString() :
+{
+    Token value;
+}
+{
+    (
+        (
+        <CONSTANT_SINGLE_QUOTED_STRING_START>
+        value = <CONSTANT_SINGLE_QUOTED_STRING_VALUE>
+        <CONSTANT_SINGLE_QUOTED_STRING_END>
+        )
+        |
+        (
+        <CONSTANT_DOUBLE_QUOTED_STRING_START>
+        value = <CONSTANT_DOUBLE_QUOTED_STRING_VALUE>
+        <CONSTANT_DOUBLE_QUOTED_STRING_END>
+        )
+    )
+    { return value.image; }
+}
+
+ConstantAST Constant() :
+{
+    Object value;
+}
+{
+    (
+        value = ConstantBoolean()
+        { return new ConstantAST(token, DataType.BOOLEAN, value); }
+        |
+        value = ConstantString()
+        { return new ConstantAST(token, DataType.STRING, value); }
+        |
+        LOOKAHEAD(1)
+        value = ConstantInteger()
+        { return new ConstantAST(token, DataType.INTEGER, value); }
+        |
+        value = ConstantFloat()
+        { return new ConstantAST(token, DataType.FLOAT, value); }
+    )
+}
+
+ComparisonOperation ComparisonOperation() :
+{}
+{
+    <OPERATOR_GREATER>
+    { return ComparisonOperation.GT; }
+    |
+    <OPERATOR_LESS>
+    { return ComparisonOperation.LT; }
+    |
+    <OPERATOR_GREATER_EQUAL>
+    { return ComparisonOperation.GE; }
+    |
+    <OPERATOR_LESS_EQUAL>
+    { return ComparisonOperation.LE; }
+    |
+    <OPERATOR_EQUAL>
+    { return ComparisonOperation.EQ; }
+    |
+    <OPERATOR_NOT_EQUAL>
+    { return ComparisonOperation.NE; }
+}
+
+DataType Type() :
+{}
+{
+    <TYPE_ID>
+    { return DataType.ID; }
+    |
+    <TYPE_TIMESTAMP>
+    { return DataType.TIMESTAMP; }
+    |
+    <TYPE_BOOLEAN>
+    { return DataType.BOOLEAN; }
+    |
+    <TYPE_INTEGER>
+    { return DataType.INTEGER; }
+    |
+    <TYPE_FLOAT>
+    { return DataType.FLOAT; }
+    |
+    <TYPE_STRING>
+    { return DataType.STRING; }
+    |
+    <TYPE_ANY>
+    { return DataType.ANY; }
+}
+
+TemporalUnit TimeUnit() :
+{}
+{
+    <TIMEUNIT_S>
+    { return ChronoUnit.SECONDS; }
+    |
+    <TIMEUNIT_M>
+    { return ChronoUnit.MINUTES; }
+    |
+    <TIMEUNIT_H>
+    { return ChronoUnit.HOURS; }
+    |
+    <TIMEUNIT_MS>
+    { return ChronoUnit.MILLIS; }
+    |
+    <TIMEUNIT_D>
+    { return ChronoUnit.DAYS; }
+}
+
+
+String Identifier() :
+{
+    Token value;
+}
+{
+    value = <IDENTIFIER>
+    { return value.image; }
+}
+
+/*
+ * EXPRESSIONS
+ */
+ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{ 
+    e1 = BooleanTerm(type, src, ctx, whenAttr) 
+	
+    (
+        t = <OPERATOR_OR>
+        e2 = BooleanTerm(type, src, ctx, whenAttr)
+        { e1 = new BoolAST(t, BoolOperation.OR, e1, e2);
+           }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{ 
+    e1 = BooleanFactor(type, src, ctx, whenAttr)    
+    (
+        t = <OPERATOR_AND>
+        e2 = BooleanFactor(type, src, ctx, whenAttr)
+        { e1 = new BoolAST(t, BoolOperation.AND, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BooleanFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BooleanNegation(type, src, ctx, whenAttr) 
+    (
+        t = <OPERATOR_XOR>
+        e2 = BooleanNegation(type, src, ctx, whenAttr)
+        { e1 = new BoolAST(t, BoolOperation.XOR, e1, e2);}
+    )*
+    { return e1; }
+}
+
+ExpressionAST BooleanNegation(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e;
+    boolean invert = false;
+
+    Token t = null;
+}
+{
+    (
+        t = <OPERATOR_NOT>
+        {
+            invert = !invert;
+        }
+    )*
+    e = BooleanPredicate(type, src, ctx, whenAttr)
+    {
+        if (invert) {
+            e = new NotAST(t, e);
+        }
+        return e;
+    }
+}
+
+ExpressionAST BooleanPredicate(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e;
+}
+{
+    e = Comparison(type, src, ctx, whenAttr)
+    [
+        e = Is(e)
+        |
+        e = Like(e)
+        |
+        e = Between(e, type, src, ctx, whenAttr)
+    ]
+    { return e; }
+}
+
+ExpressionAST Is(ExpressionAST e) :
+{
+    boolean invert = false;
+    ExpressionAST is;
+
+    Token t;
+}
+{
+    t = <KEYWORD_IS>
+    [
+        <OPERATOR_NOT>
+        { invert = true; }
+    ]
+    (
+        <CONSTANT_BOOLEAN_TRUE>
+        { is = new IsAST(t, e, LogicValue.TRUE); }
+        |
+        <CONSTANT_BOOLEAN_FALSE>
+        { is = new IsAST(t, e, LogicValue.FALSE); }
+        |
+        <CONSTANT_BOOLEAN_UNKNOWN>
+        { is = new IsAST(t, e, LogicValue.UNKNOWN); }
+        |
+        <CONSTANT_NULL>
+        { is = new IsNullAST(t, e); }
+    )
+    {
+        if (invert) {
+            is = new NotAST(t, is);
+        }
+        return is;
+    }
+}
+
+ExpressionAST Like(ExpressionAST e) :
+{
+    String pattern;
+    Expression like;
+
+    Token t;
+}
+{
+    t = <KEYWORD_LIKE>
+    pattern = ConstantString()
+    { return new LikeAST(t, e, pattern); }
+}
+
+ExpressionAST Between(ExpressionAST e, ExpressionType type,
+        String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST b;
+    ExpressionAST min;
+    ExpressionAST max;
+
+    Token t;
+}
+{
+    t = <KEYWORD_BETWEEN>
+    min = BitwiseExpression(type, src, ctx, whenAttr)
+    <OPERATOR_AND>
+    max = BitwiseExpression(type, src, ctx, whenAttr)
+    {
+        return new BetweenAST(t, e, min, max);
+    }
+}
+
+ExpressionAST Comparison(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    ComparisonOperation op;
+
+    Token t;
+}
+{
+  
+    e1 = BitwiseExpression(type, src, ctx, whenAttr) //{ whenAttr.add(token.image); }
+    [
+        op = ComparisonOperation()
+        { t = token; }
+        e2 = BitwiseExpression(type, src, ctx, whenAttr)
+        {
+            e1 = new ComparisonAST(t, op, e1, e2);
+        }
+    ]
+    { return e1; }
+}
+
+ExpressionAST BitwiseExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BitwiseTerm(type, src, ctx, whenAttr)
+    (
+        t = <OPERATOR_BITWISE_OR>
+        e2 = BitwiseTerm(type, src, ctx, whenAttr)
+        { e1 = new BitwiseAST(t, BitwiseOperation.OR, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BitwiseFactor(type, src, ctx, whenAttr)
+    (
+        t = <OPERATOR_BITWISE_AND>
+        e2 = BitwiseFactor(type, src, ctx, whenAttr)
+        { e1 = new BitwiseAST(t, BitwiseOperation.AND, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr ) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+
+    Token t;
+}
+{
+    e1 = BitwiseShift(type, src, ctx, whenAttr)
+    (
+        t = <OPERATOR_BITWISE_XOR>
+        e2 = BitwiseShift(type, src, ctx, whenAttr)
+        { e1 = new BitwiseAST(t, BitwiseOperation.XOR, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseShift(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    BitwiseOperation op;
+
+    Token t;
+}
+{
+    e1 = BitwiseNegation(type, src, ctx, whenAttr)
+    (
+        (
+            t = <OPERATOR_BITWISE_LSH>
+            { op = BitwiseOperation.LSH; }
+            |
+            t = <OPERATOR_BITWISE_RSH>
+            { op = BitwiseOperation.RSH; }
+        )
+        e2 = BitwiseNegation(type, src, ctx, whenAttr)
+        { e1 = new BitwiseAST(t, op, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST BitwiseNegation(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e;
+    boolean not = false;
+
+    Token t = null;
+}
+{
+    (
+        t = <OPERATOR_BITWISE_NOT>
+        { not = !not; }
+    )*
+    e = ArithmeticExpression(type, src, ctx, whenAttr)
+    {
+        if (not) {
+            e = new BitwiseNotAST(t, e);
+        }
+        return e;
+    }
+}
+
+ExpressionAST ArithmeticExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    ArithmeticOperation op;
+
+    Token t;
+}
+{
+    e1 = ArithmeticTerm(type, src, ctx, whenAttr)
+    (
+        (
+            t = <OPERATOR_PLUS>
+            { op = ArithmeticOperation.ADDITION; }
+            |
+            t = <OPERATOR_MINUS>
+            { op = ArithmeticOperation.SUBTRACTION; }
+        )
+        e2 = ArithmeticTerm(type, src, ctx, whenAttr)
+        { e1 = new ArithmeticAST(t, op, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST ArithmeticTerm(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e1;
+    ExpressionAST e2;
+    ArithmeticOperation op;
+
+    Token t;
+}
+{
+    e1 = ArithmeticFactor(type, src, ctx, whenAttr)
+    (
+        (
+            t = <OPERATOR_MULTIPLY>
+            { op = ArithmeticOperation.PRODUCT; }
+            |
+            t = <OPERATOR_DIVIDE>
+            { op = ArithmeticOperation.DIVISION; }
+            |
+            t = <OPERATOR_MODULO>
+            { op = ArithmeticOperation.MODULO; }
+        )
+        e2 = ArithmeticFactor(type, src, ctx, whenAttr)
+        { e1 = new ArithmeticAST(t, op, e1, e2); }
+    )*
+    { return e1; }
+}
+
+ExpressionAST ArithmeticFactor(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e;
+    Sign s = Sign.PLUS;
+
+    Token t = null;
+}
+{
+    [
+        s = Sign()
+        { t = token; }
+    ]
+    e = PrimaryExpression(type, src, ctx, whenAttr)
+    {
+        if (s == Sign.MINUS) {
+            e = new InverseAST(t, e);
+        }
+        return e;
+    }
+}
+
+ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) :
+{
+    ExpressionAST e;
+    Token t = null;
+}
+{   
+	e = ReflectionMethod(ctx)
+	{ return e; }
+	| 
+    e = Constant() 
+    { return e; }
+    |
+    (
+        "("
+        e = Expression(type, src, ctx, whenAttr) 
+        { return e; }
+        ")"
+    )
+        |
+    { t = getToken(1); }
+    e = AttributeReference(whenAttr)
+    {
+        if (type == ExpressionType.CONSTANT) {
+            ctx.addError("Only constant expressions are allowed in " + src +
+                " at " + getPosition(t));
+            return ConstantAST.NULL;
+        } else {
+            return e;
+        }
+    }
+ }
+
+AttributeReferenceAST AttributeReference(Map<String, DataType> whenAttr) :
+{
+    String id;
+    DataType type = DataType.ANY;
+
+    Token t;
+}
+{
+    id = Identifier()
+    { t = token; }
+    [
+        ":"
+        type = Type()
+    ]
+    { whenAttr.put(id, type);
+      return new AttributeReferenceAST(token, id, type); }
+}
+
+MethodAST ReflectionMethod(ParserContext ctx) :{
+	String methodName;}
+{
+	methodName = Method()
+	{ return MethodAST.create(methodName, ctx); }
+}
+
+String Method() :
+{
+    Token value;
+}
+{
+    value = <METHOD>
+    { return value.image; }
+}
+
+String RemoveDimension():{
+  String dimension;}
+{
+  < KEYWORD_REMOVE>
+  < KEYWORD_DIMENSION >
+  dimension = Identifier()
+  {    return dimension;  }}
+
