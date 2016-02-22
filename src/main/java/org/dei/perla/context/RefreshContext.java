@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.dei.perla.lang.query.expression.Expression;
 import org.dei.perla.lang.query.expression.LogicValue;
 
-public class RefreshContext {
+public class ContextDetector {
 	
 	private final ScheduledExecutorService scheduler;
 	private final Context context;
@@ -22,7 +22,7 @@ public class RefreshContext {
     private int status;
 	private Map<String, Object> cache;
 	
-	public RefreshContext(Context context, Map<String, Object> cache){
+	public ContextDetector(Context context, Map<String, Object> cache){
 		this.context = context;
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		status = STOPPED;
