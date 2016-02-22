@@ -39,7 +39,7 @@ public class ContextManager {
 	private List<Context> contexts;
 	
 	private final IComposerManager composerMgr;
-	private List<RefreshContext> refreshContext;
+	private List<ContextDetector> contextDetectors;
 	private final ContextExecutor ctxExecutor;
 	
 	private final List<Plugin> plugins;
@@ -57,7 +57,7 @@ public class ContextManager {
 		cdtParser = new CDTreeParser();
 		ctxParser = new ContextParser();
 		contexts = new ArrayList<Context>();
-		refreshContext = new ArrayList<RefreshContext>();
+		contextDetectors = new ArrayList<RefreshContext>();
 		ctxExecutor = new ContextExecutor(conflictDetector);
 		this.composerMgr = composerMgr;
 		cache = new ConcurrentHashMap<String, Object>();
@@ -194,8 +194,8 @@ public class ContextManager {
 			contexts.add(toDetect);
 			toDetect.addObserver(ctxExecutor);
 			composerMgr.removePossibleContext(toDetect);
-			RefreshContext r = new RefreshContext(toDetect, cache);
-			refreshContext.add(r);
+			ContextDetector r = new ContextDetector(toDetect, cache);
+			contextDetectors.add(r);
 			r.start();
 		}
 		else {
@@ -213,7 +213,7 @@ public class ContextManager {
 		int index = getIndexContext(ctxName);
 		if(index > -1){
 			contexts.remove(index);
-			refreshContext.remove(index);
+			contextDetectors.remove(index);
 		}
 		else {
 			System.out.println("There is not a context with the name " + ctxName);
