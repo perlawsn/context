@@ -1,6 +1,7 @@
 package contextTest;
 
 import static org.junit.Assert.*;
+
 import java.io.StringReader;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import org.dei.perla.lang.parser.FieldSelection;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.*;
 import org.dei.perla.lang.query.expression.AttributeReference;
+import org.dei.perla.lang.query.expression.Comparison;
 import org.dei.perla.lang.query.expression.Constant;
 import org.dei.perla.lang.query.expression.Expression;
 import org.dei.perla.lang.query.statement.*;
@@ -32,12 +34,13 @@ public class WhenCondTest {
 	public void evaluatedWhenTest() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN 10 > 35"
+				 		+ " CREATE CONCEPT Hot WHEN contextTest.TestClass.getUserId = 'bc' "
 				 		+ " EVALUATED ON 'EVERY 1 m SELECT AVG(temp:integer, 1 m)" 
 				 		+ " SAMPLING EVERY 5 s "
 				 		+ " EXECUTE IF EXISTS(temp)'"));
 		  Concept c = parser.CreateConcept(ctx, null);
 		  WhenCondition w = c.getWhen();
+		  assertTrue(w.getWhen() instanceof Comparison);
 	      Statement ast = w.getEvaluatedOn();
 	      boolean b = (ast instanceof SelectionStatement);
 	      assertTrue(b);

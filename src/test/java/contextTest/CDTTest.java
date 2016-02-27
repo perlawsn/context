@@ -50,7 +50,6 @@ public class CDTTest {
 		    List<Dimension> dims = cdt.getDimensions();
 	        assertFalse(dims.isEmpty());
 		    Dimension location = dims.get(0);
-		    System.out.println(ctx.getErrorDescription());
 	        assertFalse(ctx.hasErrors());
 	        assertThat(location.getName(), equalTo("Location"));
 	        assertThat(location.getFather(), equalTo("ROOT"));
@@ -134,14 +133,14 @@ public class CDTTest {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(" "
 		 	+ "CREATE DIMENSION Location "
-		 		+ "CREATE CONCEPT office WHEN location:string = 'office' "
+		 		+ "CREATE CONCEPT office WHEN contextTest.TestClass.getUserId  = 'abc' "
 		 			+ "CREATE ATTRIBUTE $prova EVALUATED ON \"EVERY ONE SELECT prova:string SAMPLING EVERY 2 d \" "
 		 		+ "CREATE CONCEPT meeting_room WHEN location:string = 'meeting_room' "
 		 			+ "CREATE ATTRIBUTE $prova EVALUATED ON \"EVERY ONE SELECT prova:string SAMPLING EVERY 2 H \" "));
 		 parser.CDT(ctx);
 		 assertTrue(ctx.hasErrors());
-		 System.out.println(ctx.getErrorDescription());
 	 } 
+	 
 
 
 }

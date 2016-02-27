@@ -44,7 +44,7 @@ public class ContextElemAtt implements ContextElement{
 	}
 
 	public String toString(){
-		return dimension + "." + exp;
+		return dimension + "." + attribute + " " + exp;
 	}
 
 	@Override
@@ -54,8 +54,8 @@ public class ContextElemAtt implements ContextElement{
 		if(!(o instanceof ContextElemAtt))
 			return false;
 		ContextElemAtt ces = (ContextElemAtt) o; 
-		//bisogna implementare equals per le espressioni
-		return true;
+		//TODO bisognerebbe implementare equals anche per le espressioni
+		return dimension.equals(ces.getDimension()) && attribute.equals(ces.getAttribute());
 	}
 
 

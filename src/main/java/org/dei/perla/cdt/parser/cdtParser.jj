@@ -425,32 +425,40 @@ Dimension CreateDimension(ParserContext ctx):
   List<Concept> concepts = new ArrayList<Concept>();
 
 // in this variable all attributes on the concepts on a dimension are stored
-  Set<String> atts = new TreeSet<String>();}
+  Set<String> atts = new TreeSet<String>();
+}
 {
   < KEYWORD_DIMENSION >
   name = Identifier()
-  [    father = ChildOf(ctx)
+  [
+    father = ChildOf(ctx)
   ]
-  (    LOOKAHEAD(2)
+  (
+    LOOKAHEAD(2)
    	att = CreateAttribute(ctx, father)
    	{ return new Dimension(name, father, att); }
     |
     LOOKAHEAD(2)
     concepts = CreateConcepts(ctx, atts)
     { return new Dimension(name, father, concepts); }
-   )}
+   )
+}
 
 String ChildOf(ParserContext ctx):
-{	String father;
+{
+	String father;
 }
 {
   < KEYWORD_CHILD >
   < KEYWORD_OF >
   father = Identifier()
-  { return father; }}
+  { return father; }
+
+}
 
 CreateAttr CreateAttribute(ParserContext ctx, String src):
-{	String id;
+{
+	String id;
 	String evaluatedOn;
 }
 {
@@ -467,18 +475,21 @@ CreateAttr CreateAttribute(ParserContext ctx, String src):
 	<KEYWORD_AS> 
 		evaluatedOn = Method()
 	{ return CreateAttr.createWithMethod(id, evaluatedOn, ctx, src); }
-  )}
+  )
+}
 
 List<Concept> CreateConcepts(ParserContext ctx, Set<String> atts):
 {
   List<Concept> concepts = new ArrayList<Concept>();
   Concept c;
-  Set<String> names = new TreeSet<String>();}
+  Set<String> names = new TreeSet<String>();
+}
 {
     c = CreateConcept(ctx, atts)
     {
       names.add(c.getName());
-      concepts.add(c);    }
+      concepts.add(c);
+    }
     (
      LOOKAHEAD(2)
 	 c = CreateConcept(ctx, atts)
@@ -492,35 +503,38 @@ List<Concept> CreateConcepts(ParserContext ctx, Set<String> atts):
          }
       }
     )*
-    { return concepts; } }
+    { return concepts; } 
+}
 
 Concept CreateConcept(ParserContext ctx, Set<String> atts):
 {
   String name;
   String whenEvaluated = null;
-  WhenCondition cond = null;
+  WhenCondition cond = WhenCondition.EMPTY;
   ExpressionAST when = ConstantAST.TRUE;
   List<CreateAttr> subAtts = Collections.emptyList();
   Set<String> ids = new TreeSet<String>();
   PartialComponent enable = PartialComponent.EMPTY;
   PartialComponent disable = PartialComponent.EMPTY;
   Refresh refresh = Refresh.NEVER;
-  Map<String, DataType> whenAttr = new HashMap<String, DataType>();}
+  Map<String, DataType> whenAttr = new HashMap<String, DataType>();
+}
 {
   < KEYWORD_CREATE >
   < KEYWORD_CONCEPT >
   name = Identifier()
-  [
-  	< KEYWORD_WHEN >
-  	when = Expression(ExpressionType.SIMPLE, "when clause", ctx, whenAttr)
-  ]
-  [	
-    < KEYWORD_EVALUATED >
-  	< KEYWORD_ON >
-  	whenEvaluated = ConstantString()
-  ]
-  {
-    cond = WhenCondition.create(whenAttr, when, whenEvaluated, ctx, name);  }
+  (
+	  < KEYWORD_WHEN >
+	  	when = Expression(ExpressionType.SIMPLE, "when clause", ctx, whenAttr)
+	  [	
+	    < KEYWORD_EVALUATED >
+	  	< KEYWORD_ON >
+	  	whenEvaluated = ConstantString()
+	  ]
+	  {
+	    cond = WhenCondition.create(whenAttr, when, whenEvaluated, ctx, name);
+	  }
+	)?
   [
     LOOKAHEAD(2)
     enable = WithEnable(ctx, name)
@@ -537,20 +551,24 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
 	LOOKAHEAD(2)
     subAtts = AddConceptAttributes(ctx, atts, name)
   ]
-  { return new Concept(name, cond, subAtts, enable, disable, refresh); }}
+  { return new Concept(name, cond, subAtts, enable, disable, refresh); }
+}
 
 
 
 PartialComponent WithEnable(ParserContext ctx, String concept):
 {
-  String enable;}
+  String enable;
+}
 {
   < KEYWORD_WITH >
   < KEYWORD_ENABLE >
   < KEYWORD_COMPONENT >
   < KEYWORD_COLON >
 	enable = ConstantString()
-	{ return PartialComponent.createEnable(enable, ctx, concept); } } 
+	{ return PartialComponent.createEnable(enable, ctx, concept); }
+ }
+ 
 PartialComponent WithDisable(ParserContext ctx, String concept):
 {
   String disable;
@@ -609,8 +627,13 @@ CreateAttr AddConceptAttribute(ParserContext ctx, Set<String> atts, String conce
   < KEYWORD_DOLLAR >
   id = Identifier()
   {
-    if(atts.contains(id)){      ctx.addError("Duplicate attribute " + id + " in concept " + conceptName);  	} else  	{
-    	atts.add(id);  	}  }
+    if(atts.contains(id)){
+      ctx.addError("Duplicate attribute " + id + " in concept " + conceptName);
+  	} else
+  	{
+    	atts.add(id);
+  	}
+  }
   (
 	< KEYWORD_EVALUATED >
 	< KEYWORD_ON >
@@ -818,7 +841,8 @@ ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx, Ma
     Token t;
 }
 { 
-    e1 = BooleanFactor(type, src, ctx, whenAttr)    
+    e1 = BooleanFactor(type, src, ctx, whenAttr)
+    
     (
         t = <OPERATOR_AND>
         e2 = BooleanFactor(type, src, ctx, whenAttr)
@@ -1144,7 +1168,7 @@ ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext c
     ExpressionAST e;
     Token t = null;
 }
-{   
+{   LOOKAHEAD(2)
 	e = ReflectionMethod(ctx)
 	{ return e; }
 	| 
@@ -1189,8 +1213,10 @@ AttributeReferenceAST AttributeReference(Map<String, DataType> whenAttr) :
       return new AttributeReferenceAST(token, id, type); }
 }
 
-MethodAST ReflectionMethod(ParserContext ctx) :{
-	String methodName;}
+MethodAST ReflectionMethod(ParserContext ctx) :
+{
+	String methodName;
+}
 {
 	methodName = Method()
 	{ return MethodAST.create(methodName, ctx); }
@@ -1205,11 +1231,16 @@ String Method() :
     { return value.image; }
 }
 
-String RemoveDimension():{
-  String dimension;}
+String RemoveDimension():
+{
+  String dimension;
+}
 {
   < KEYWORD_REMOVE>
   < KEYWORD_DIMENSION >
   dimension = Identifier()
-  {    return dimension;  }}
+  {
+    return dimension;
+  }
+}
 

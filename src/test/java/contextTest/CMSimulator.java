@@ -1,4 +1,4 @@
-package org.dei.perla.context;
+package contextTest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import org.dei.perla.cdt.FunctionEvaluatedOn;
 import org.dei.perla.cdt.QueryEvaluatedOn;
 import org.dei.perla.cdt.parser.CDTreeParser;
 import org.dei.perla.cdt.parser.ParseException;
+import org.dei.perla.context.*;
 import org.dei.perla.context.parser.ContextParser;
 import org.dei.perla.core.PerLaSystem;
 import org.dei.perla.core.Plugin;
@@ -30,7 +31,7 @@ import org.dei.perla.lang.query.expression.LogicValue;
 import org.dei.perla.lang.query.statement.Statement;
 
 
-public class ContextManager {
+public class CMSimulator {
 	
 	private final CDTreeParser cdtParser;
 	private CDT cdt;
@@ -44,7 +45,7 @@ public class ContextManager {
 	
 	private final List<Plugin> plugins;
     private final PerLaSystem system;
-    private final Executor queryExec;
+    private final ExecutorSimulator queryExec;
 
 	//cache for quickly retrieving the current value of a dimension
 	private static Map<String, Object> cache;
@@ -52,7 +53,7 @@ public class ContextManager {
 	private Map<String, Integer> cdtHandlerUtils;
 	private List<StatementHandler> cdtHandlers;
 	
-	public ContextManager(IComposerManager composerMgr, IConflictDetector conflictDetector) {
+	public CMSimulator(IComposerManager composerMgr, IConflictDetector conflictDetector) {
 		cdt = null;
 		cdtParser = new CDTreeParser();
 		ctxParser = new ContextParser();
@@ -63,7 +64,7 @@ public class ContextManager {
 		cache = new ConcurrentHashMap<String, Object>();
 		plugins = Arrays.asList(new SimulatorMapperFactory(), new SimulatorChannelPlugin());
 		system = new PerLaSystem(plugins);
-		queryExec = new Executor(system);
+		queryExec = new ExecutorSimulator(system);
 		cdtHandlerUtils = new HashMap<String, Integer>();
 		cdtHandlers = new ArrayList<>();
 	}

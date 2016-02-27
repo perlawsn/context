@@ -13,4 +13,5 @@ public class TestClass {
 	public String getIdApparecchio(){
 		return "EFX21";
 	}
+	
 }

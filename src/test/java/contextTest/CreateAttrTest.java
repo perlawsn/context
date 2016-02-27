@@ -45,7 +45,6 @@ public class CreateAttrTest {
 		boolean b = (q instanceof FunctionEvaluatedOn);
 		assertTrue(b);
 		FunctionEvaluatedOn f = (FunctionEvaluatedOn) q;
-		System.out.println(f.getClassName() + " " + f.getMethodName() + " " + f.computeValue());
 		assertTrue(f.getClassName().equals("contextTest.TestClass"));
 		assertTrue(f.getMethodName().equals("getUserId"));
 		assertTrue(f.computeValue().equals("abcd12"));

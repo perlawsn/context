@@ -38,7 +38,9 @@ public class CreateAttr {
         return new CreateAttr(attName, e);
 	}
 	
-	
+	public String toString(){
+		return "ATTRIBUTE $" + name;
+	}
 
 
 	

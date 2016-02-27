@@ -3,6 +3,7 @@ package org.dei.perla.cdt;
 import java.io.StringReader;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ public class WhenCondition {
 	private final String evaluatedOn; 
 	private Statement evaluatedOnStat; 
 	
+	public final static WhenCondition EMPTY = new WhenCondition(Collections.EMPTY_MAP, null, "", null);
 	
 	private WhenCondition(Map<String, DataType> attributes, Expression when, String evaluatedOn, Statement ast){
 		this.when = when;
@@ -60,11 +62,13 @@ public class WhenCondition {
 	public static WhenCondition create(Map<String, DataType> attributes, ExpressionAST whenAST, 
 		String evaluatedOn, ParserContext ctx, String src){
 		StatementAST ast = null;
-		if(attributes != null && evaluatedOn == null) {
+		if(attributes.isEmpty() && whenAST.equals(ConstantAST.TRUE)) { 
+			ast = null;
+		}
+		else if(attributes.size() > 0 && evaluatedOn == null) { 
 			ast = createDefaultEvaluatedOn(attributes);
-		}	
-		else{
-	        ParserAST p = new ParserAST(new StringReader(evaluatedOn));
+		} else {
+	        ParserAST p = new ParserAST(new StringReader(evaluatedOn)); 
 	        try {
 	            ast = p.Statement(ctx);
 	        } catch(ParseException e) {
@@ -77,17 +81,21 @@ public class WhenCondition {
 	        }
 		}
 		ParserContext compilationErrors = new ParserContext();
-		Statement s = ast.compile(compilationErrors);
-		if(compilationErrors.getErrorCount() > 0) {
-            ctx.addError(compilationErrors.getErrorDescription());
+		Statement s = null;
+		if( ast != null) {
+			s = ast.compile(compilationErrors);
+			if(compilationErrors.getErrorCount() > 0) {
+	            ctx.addError(compilationErrors.getErrorDescription());
+			}
 		}
 		compilationErrors = new ParserContext();
-		Expression when = whenAST.compile(DataType.ANY, compilationErrors, new AttributeOrder());
+		Expression when = whenAST.compile(DataType.BOOLEAN, compilationErrors, new AttributeOrder());
 		if(compilationErrors.getErrorCount() > 0) {
             ctx.addError(ctx.getErrorDescription());
 		}
 		return new WhenCondition(attributes, when, evaluatedOn, s);
 	}
+	
 	
 	 /* It is advisable that the user specifies a EVALUATED ON clause associated to the 
 	 * WHEN condition clause. Otherwise, the system creates a default EVALUATED ON clause of the type

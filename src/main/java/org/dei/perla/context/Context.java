@@ -73,6 +73,7 @@ public class Context extends Observable {
 	public ArrayList<Observer> getObservers() {
 		return observers;
 	}
+	
 	public void setObservers(ArrayList<Observer> observers) {
 		this.observers = observers;
 	}
@@ -84,12 +85,13 @@ public class Context extends Observable {
 	}
 
 	public String toString(){
-		StringBuilder elems = new StringBuilder("\nCONTEXT ELEMENTS:");
-		for(ContextElement e: contElements){
-			elems.append("\n");
-			elems.append(e.toString());
+		StringBuilder elems = new StringBuilder("ACTIVE IF ");
+		for(int i = 0; i < contElements.size(); i++){
+			elems.append(contElements.get(i));
+			if( i < (contElements.size() - 1))
+			elems.append(" AND ");
 		}
-		return "CONTEXT " + name + elems;
+		return name + " " + elems;
 	}
 	
 	@Override
@@ -99,7 +101,13 @@ public class Context extends Observable {
 		if(!(o instanceof Context))
 			return false;
 		Context ctx = (Context) o; 
-		//to do
+		if(ctx.getContextElements().size() != contElements.size())
+			return false;
+		for(int i = 0; i < contElements.size(); i++) {
+			ContextElement current = ctx.getContextElements().get(i);
+			if(!current.equals(contElements.get(i)))
+					return false;
+		}
 		return true;
 	}
 

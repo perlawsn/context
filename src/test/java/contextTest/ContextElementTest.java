@@ -16,7 +16,6 @@ import org.dei.perla.lang.query.statement.Refresh;
 import org.junit.Before;
 import org.junit.Test;
 
-//da completare
 public class ContextElementTest {
 	
 	private static CDT cdt = CDT.getCDT();

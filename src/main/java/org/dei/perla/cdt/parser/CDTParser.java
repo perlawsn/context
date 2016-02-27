@@ -171,7 +171,7 @@ public final class CDTParser implements CDTParserConstants {
   final public Concept CreateConcept(ParserContext ctx, Set<String> atts) throws ParseException {
   String name;
   String whenEvaluated = null;
-  WhenCondition cond = null;
+  WhenCondition cond = WhenCondition.EMPTY;
   ExpressionAST when = ConstantAST.TRUE;
   List<CreateAttr> subAtts = Collections.emptyList();
   Set<String> ids = new TreeSet<String>();
@@ -186,22 +186,22 @@ public final class CDTParser implements CDTParserConstants {
     case KEYWORD_WHEN:
       jj_consume_token(KEYWORD_WHEN);
       when = Expression(ExpressionType.SIMPLE, "when clause", ctx, whenAttr);
-      break;
-    default:
-      jj_la1[3] = jj_gen;
-      ;
-    }
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case KEYWORD_EVALUATED:
-      jj_consume_token(KEYWORD_EVALUATED);
-      jj_consume_token(KEYWORD_ON);
-      whenEvaluated = ConstantString();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case KEYWORD_EVALUATED:
+        jj_consume_token(KEYWORD_EVALUATED);
+        jj_consume_token(KEYWORD_ON);
+        whenEvaluated = ConstantString();
+        break;
+      default:
+        jj_la1[3] = jj_gen;
+        ;
+      }
+            cond = WhenCondition.create(whenAttr, when, whenEvaluated, ctx, name);
       break;
     default:
       jj_la1[4] = jj_gen;
       ;
     }
-    cond = WhenCondition.create(whenAttr, when, whenEvaluated, ctx, name);
     if (jj_2_4(2)) {
       enable = WithEnable(ctx, name);
     } else {
@@ -1016,30 +1016,30 @@ public final class CDTParser implements CDTParserConstants {
   final public ExpressionAST PrimaryExpression(ExpressionType type, String src, ParserContext ctx, Map<String, DataType> whenAttr) throws ParseException {
     ExpressionAST e;
     Token t = null;
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case METHOD:
+    if (jj_2_9(2)) {
       e = ReflectionMethod(ctx);
           {if (true) return e;}
-      break;
-    case CONSTANT_BOOLEAN_TRUE:
-    case CONSTANT_BOOLEAN_FALSE:
-    case CONSTANT_INTEGER_10:
-    case CONSTANT_INTEGER_16:
-    case CONSTANT_FLOAT:
-    case CONSTANT_SINGLE_QUOTED_STRING_START:
-    case CONSTANT_DOUBLE_QUOTED_STRING_START:
-      e = Constant();
+    } else {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case CONSTANT_BOOLEAN_TRUE:
+      case CONSTANT_BOOLEAN_FALSE:
+      case CONSTANT_INTEGER_10:
+      case CONSTANT_INTEGER_16:
+      case CONSTANT_FLOAT:
+      case CONSTANT_SINGLE_QUOTED_STRING_START:
+      case CONSTANT_DOUBLE_QUOTED_STRING_START:
+        e = Constant();
       {if (true) return e;}
-      break;
-    case 87:
-      jj_consume_token(87);
-      e = Expression(type, src, ctx, whenAttr);
+        break;
+      case 87:
+        jj_consume_token(87);
+        e = Expression(type, src, ctx, whenAttr);
           {if (true) return e;}
-      jj_consume_token(88);
-      break;
-    case IDENTIFIER:
+        jj_consume_token(88);
+        break;
+      case IDENTIFIER:
       t = getToken(1);
-      e = AttributeReference(whenAttr);
+        e = AttributeReference(whenAttr);
         if (type == ExpressionType.CONSTANT) {
             ctx.addError("Only constant expressions are allowed in " + src +
                 " at " + getPosition(t));
@@ -1047,11 +1047,12 @@ public final class CDTParser implements CDTParserConstants {
         } else {
             {if (true) return e;}
         }
-      break;
-    default:
-      jj_la1[34] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
+        break;
+      default:
+        jj_la1[34] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
     }
     throw new Error("Missing return statement in function");
   }
@@ -1156,57 +1157,11 @@ public final class CDTParser implements CDTParserConstants {
     finally { jj_save(7, xla); }
   }
 
-  private boolean jj_3R_20() {
-    if (jj_scan_token(KEYWORD_WITH)) return true;
-    if (jj_scan_token(KEYWORD_REFRESH)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_17() {
-    if (jj_scan_token(KEYWORD_CREATE)) return true;
-    if (jj_scan_token(KEYWORD_CONCEPT)) return true;
-    return false;
-  }
-
-  private boolean jj_3_8() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3_5() {
-    if (jj_3R_19()) return true;
-    return false;
-  }
-
-  private boolean jj_3_3() {
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_21() {
-    if (jj_3R_22()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_18() {
-    if (jj_scan_token(KEYWORD_WITH)) return true;
-    if (jj_scan_token(KEYWORD_ENABLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3_4() {
-    if (jj_3R_18()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_16() {
-    if (jj_3R_17()) return true;
-    return false;
-  }
-
-  private boolean jj_3_2() {
-    if (jj_3R_16()) return true;
-    return false;
+  private boolean jj_2_9(int xla) {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return !jj_3_9(); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(8, xla); }
   }
 
   private boolean jj_3R_15() {
@@ -1217,6 +1172,47 @@ public final class CDTParser implements CDTParserConstants {
 
   private boolean jj_3_7() {
     if (jj_3R_21()) return true;
+    return false;
+  }
+
+  private boolean jj_3_6() {
+    if (jj_3R_20()) return true;
+    return false;
+  }
+
+  private boolean jj_3_5() {
+    if (jj_3R_19()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_20() {
+    if (jj_scan_token(KEYWORD_WITH)) return true;
+    if (jj_scan_token(KEYWORD_REFRESH)) return true;
+    return false;
+  }
+
+  private boolean jj_3_3() {
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
+  private boolean jj_3_4() {
+    if (jj_3R_18()) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_3R_16()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_16() {
+    if (jj_3R_17()) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_3R_15()) return true;
     return false;
   }
 
@@ -1232,13 +1228,40 @@ public final class CDTParser implements CDTParserConstants {
     return false;
   }
 
-  private boolean jj_3_1() {
-    if (jj_3R_15()) return true;
+  private boolean jj_3R_24() {
+    if (jj_scan_token(METHOD)) return true;
     return false;
   }
 
-  private boolean jj_3_6() {
-    if (jj_3R_20()) return true;
+  private boolean jj_3R_17() {
+    if (jj_scan_token(KEYWORD_CREATE)) return true;
+    if (jj_scan_token(KEYWORD_CONCEPT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_23() {
+    if (jj_3R_24()) return true;
+    return false;
+  }
+
+  private boolean jj_3_8() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_18() {
+    if (jj_scan_token(KEYWORD_WITH)) return true;
+    if (jj_scan_token(KEYWORD_ENABLE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_21() {
+    if (jj_3R_22()) return true;
+    return false;
+  }
+
+  private boolean jj_3_9() {
+    if (jj_3R_23()) return true;
     return false;
   }
 
@@ -1263,15 +1286,15 @@ public final class CDTParser implements CDTParserConstants {
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x100,0x2000,0x40000,0x1000,0x40000,0x40000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1c000000,0x1c000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe0000000,0xe0000000,0x0,0x0,0x2000000,};
+      jj_la1_0 = new int[] {0x100,0x2000,0x40000,0x40000,0x1000,0x40000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1c000000,0x1c000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe0000000,0xe0000000,0x0,0x0,0x2000000,};
    }
    private static void jj_la1_init_1() {
       jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x3,0x0,0x0,0x0,0x0,0x3f000,0xf0000000,0xf800000,0x20,0x10,0x8,0x4,0x0,0x0,0x4,0x0,0x3f000,0x800,0x400,0x200,0x180,0x180,0x40,0x3,0x3,0x0,0x0,0x3,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x8,0x0,0x0,0x8,0x0,0x60,0x300,0x1800,0x1f60,0x0,0x7,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xf0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe01f60,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x8,0x0,0x0,0x8,0x0,0x60,0x300,0x1800,0x1f60,0x0,0x7,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xf0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xa01f60,0x0,};
    }
-  final private JJCalls[] jj_2_rtns = new JJCalls[8];
+  final private JJCalls[] jj_2_rtns = new JJCalls[9];
   private boolean jj_rescan = false;
   private int jj_gc = 0;
 
@@ -1502,7 +1525,7 @@ public final class CDTParser implements CDTParserConstants {
 
   private void jj_rescan_token() {
     jj_rescan = true;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
     try {
       JJCalls p = jj_2_rtns[i];
       do {
@@ -1517,6 +1540,7 @@ public final class CDTParser implements CDTParserConstants {
             case 5: jj_3_6(); break;
             case 6: jj_3_7(); break;
             case 7: jj_3_8(); break;
+            case 8: jj_3_9(); break;
           }
         }
         p = p.next;

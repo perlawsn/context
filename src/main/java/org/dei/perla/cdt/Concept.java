@@ -69,10 +69,7 @@ public class Concept extends Node{
 
     public String toString(){
     	StringBuffer s = new StringBuffer("");
-    	// to do
-    	return "CONCEPT " + name + " \n\tWHEN " + when + 
-    			" \n\tENABLE " + enable + " \n\tDISABLE " + disable + " \n\tREFRESH " + refresh 
-    					+ " \n\tATTRIBUTES " + s.toString();
+    	return "CONCEPT " + name;
     }
     
 }

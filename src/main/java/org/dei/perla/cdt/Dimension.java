@@ -72,15 +72,15 @@ public class Dimension extends Node{
 	
 	public String toString(){
 		String children = new String();
-		if(att != null) {
-			children = att.toString();
+		if(att != CreateAttr.EMPTY) {
+			children = "\n" + att.toString();
 		} else {
-			StringBuffer s = new StringBuffer("\n");
+			StringBuffer s = new StringBuffer("\n [");
 			for(Concept c: concepts) {
-				s.append("\t");
-				s.append(c.toString());
-				s.append("\n");
+				s.append(c.getName());
+				s.append(", ");
 			}
+			s.append("]");
 			children = s.toString();
 		}
 		return "DIMENSION " + name + " CHILD OF " + father + children;
