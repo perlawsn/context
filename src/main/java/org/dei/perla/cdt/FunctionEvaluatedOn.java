@@ -61,7 +61,7 @@ public class FunctionEvaluatedOn implements EvaluatedOn {
 			classe = Class.forName(nameClass);	
 		} catch (ClassNotFoundException e) {
 			ctx.addError("Exception in defining the EVALUATED ON clause "
-            		+ "of ATTRIBUTE " + attName + " OF " + src + "\n" + e.getMessage());
+            		+ "of ATTRIBUTE " + attName + " OF " + src + "\nClass name may be wrong");
 			nameClass = "";
 		}
 		Method getNameFunction;
@@ -69,7 +69,7 @@ public class FunctionEvaluatedOn implements EvaluatedOn {
 			getNameFunction = classe.getDeclaredMethod(nameMethod, null);
 		} catch (NoSuchMethodException | SecurityException e) {
 			ctx.addError("Exception in defining the EVALUATED ON clause "
-            		+ "of ATTRIBUTE " + attName + " OF " + src + "\n" + e.getMessage());
+            		+ "of ATTRIBUTE " + attName + " OF " + src + "\nMethod name may be wrong");
 			nameMethod = "";
 		}
 		return new FunctionEvaluatedOn(nameClass, nameMethod);

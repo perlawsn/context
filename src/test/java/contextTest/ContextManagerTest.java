@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import org.dei.perla.cdt.CDT;
+import org.dei.perla.cdt.Dimension;
 import org.dei.perla.cdt.parser.ParseException;
 import org.dei.perla.context.ComposerManager;
 import org.dei.perla.context.ConflictDetector;
@@ -31,7 +32,7 @@ public class ContextManagerTest {
 				"CREATE CONCEPT office WHEN location:string = 'office' " + 
 				"CREATE CONCEPT meeting_room WHEN location:string = 'meeting_room' " +
 			"CREATE DIMENSION Smoke " +
-				"CREATE CONCEPT none WHEN smoke < 0.4 " +
+				"CREATE CONCEPT none WHEN smoke:float < 0.4 " +
 					"EVALUATED ON 'EVERY 30 m SELECT smoke:float SAMPLING EVERY 10 m EXECUTE IF EXISTS (smoke)' " +
 					"WITH ENABLE COMPONENT: 'EVERY 30 m SELECT smoke:float SAMPLING EVERY 15 m EXECUTE IF EXISTS (smoke)' " +
 					"WITH REFRESH COMPONENT: 20 m " +
@@ -49,11 +50,11 @@ public class ContextManagerTest {
 					"EVALUATED ON 'EVERY 30 m SELECT temperature:float SAMPLING EVERY 20 m EXECUTE IF EXISTS (temperature)' " +
 					"WITH ENABLE COMPONENT: 'EVERY 10 m SELECT temperature:float SAMPLING EVERY 10 m EXECUTE IF EXISTS (temperature)' " +
 					"WITH REFRESH COMPONENT: 30 m " +
-				"CREATE CONCEPT mild WHEN temperature >= 0.4 AND temperature >= 1 " + 
+				"CREATE CONCEPT mild WHEN temperature:float >= 0.4 AND temperature:float >= 1 " + 
 					"EVALUATED ON 'EVERY 30 m SELECT temperature:float SAMPLING EVERY 40 m EXECUTE IF EXISTS (temperature)' " +
 					"WITH ENABLE COMPONENT: 'EVERY 10 m SELECT temperature:float SAMPLING EVERY 10 m EXECUTE IF EXISTS (temperature)' " +
 					"WITH REFRESH COMPONENT: 30 m " +
-				"CREATE CONCEPT hot WHEN temperature >= 24 " +
+				"CREATE CONCEPT hot WHEN temperature:float >= 24 " +
 					"EVALUATED ON 'EVERY 30 m SELECT temperature:float SAMPLING EVERY 20 m EXECUTE IF EXISTS (temperature)' " +
 					"WITH ENABLE COMPONENT: 'EVERY 10 m SELECT temperature:float SAMPLING EVERY 10 m EXECUTE IF EXISTS (temperature)' " +
 					"WITH REFRESH COMPONENT: 30 m " +
@@ -86,6 +87,30 @@ public class ContextManagerTest {
 	public void init() throws ParseException{
 		ctxManager = new ContextManager(new ComposerManager(), new ConflictDetector());
 		ctxManager.createCDT(cdt);
+	}
+
+	@Test
+	public void addDimension(){
+		CDT cdt = ctxManager.getCDT();
+		ctxManager.addDimension("ADD DIMENSION Test1 " +
+				"CREATE CONCEPT office WHEN location:string = 'office' " + 
+				"CREATE CONCEPT meeting_room WHEN location:string = 'meeting_room' ");
+		Dimension dim = cdt.getDimByName("Test1");
+		assertTrue(dim.containsConcept("office"));
+		assertTrue(dim.containsConcept("meeting_room"));
+		assertTrue(ctxManager.getCache().containsKey("Test1"));
+		Map<String, Integer> handlers = ctxManager.getHandlers();
+		assertTrue(handlers.containsKey("Test1.office"));
+		assertTrue(handlers.containsKey("Test1.meeting_room"));
+
+		ctxManager.addDimension("ADD DIMENSION Test2 " +
+				"CREATE ATTRIBUTE $attributo AS contextTest.TestClass.getIdCompagnia = 'abc' ");
+		assertTrue(ctxManager.getCache().containsKey("Test2.attributo"));
+		
+		ctxManager.removeDimension("REMOVE DIMENSION Test2");
+		assertNull(cdt.getDimByName("Test2"));
+		assertFalse(ctxManager.getCache().containsKey("Test2"));
+		assertFalse(ctxManager.getCache().containsKey("Test2.attributo"));
 	}
 	
 	@Test
@@ -126,8 +151,10 @@ public class ContextManagerTest {
 		Map<String, Object> cache = ctxManager.getCache();
 		assertTrue(cache.containsKey("Location"));
 		assertTrue(cache.containsKey("Smoke"));
-		assertTrue(cache.containsKey("Humidity"));
 		assertTrue(cache.containsKey("Env_Temp"));
+		Map<String, Integer> handlers = ctxManager.getHandlers();
+		assertTrue(handlers.containsKey("Location.office"));
+		assertTrue(handlers.containsKey("Location.meeting_room"));
 	}
 	
 	@Test

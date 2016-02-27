@@ -32,7 +32,6 @@ public class Dimension extends Node{
 	public CreateAttr getAttribute() {
 		return att;
 	}
-	
 
 	public List<Concept> getConcepts() {
 		return concepts;
@@ -44,6 +43,21 @@ public class Dimension extends Node{
 	
 	public void removeConcept(Concept child){
 		concepts.add(child);
+	}
+	
+	public boolean containsConcept(Concept c){
+		if(c != null) 
+			return containsConcept(c.getName());
+		else
+			return false;
+	}
+	
+	public boolean containsConcept(String conceptName){
+		for(Concept c: concepts){
+			if(c.getName().equals(conceptName))
+				return true;
+		}
+		return false;
 	}
 	
 	public void removeConceptByName(String conceptName){

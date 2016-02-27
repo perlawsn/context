@@ -1244,3 +1244,30 @@ String RemoveDimension():
   }
 }
 
+Dimension AddDimension(ParserContext ctx):
+{
+  String name;
+  String father = "ROOT";
+  CreateAttr att = null;
+  List<Concept> concepts = new ArrayList<Concept>();
+
+  Set<String> atts = new TreeSet<String>();
+}
+{
+  < KEYWORD_ADD >
+  < KEYWORD_DIMENSION >
+  name = Identifier()
+  [
+    father = ChildOf(ctx)
+  ]
+  (
+    LOOKAHEAD(2)
+   	att = CreateAttribute(ctx, father)
+   	{ return new Dimension(name, father, att); }
+    |
+    LOOKAHEAD(2)
+    concepts = CreateConcepts(ctx, atts)
+    { return new Dimension(name, father, concepts); }
+   )
+}
+

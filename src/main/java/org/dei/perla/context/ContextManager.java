@@ -96,6 +96,10 @@ public class ContextManager {
 		return -1;
 	}
 	
+	/*
+	 * returns the shallow copy of the cache containing the value of the Dimension and attribute
+	 * at the moment of the method invocation
+	 */
 	public Map<String, Object> getCache(){
 		Map<String, Object> shallowCopy = new HashMap<String, Object>();
 		shallowCopy.putAll(cache);
@@ -120,9 +124,31 @@ public class ContextManager {
 		try {
 			dim = cdtParser.parseAddDimension(text);
 			cdt.addDimension(dim);
-			for(Concept c: dim.getConcepts()){
-				// FINIRE DI FARE AGGIORNANDO LA CACHE E GLI HANDLERS E TESTARE
+			boolean hasConcept = false;
+			int index = cdtHandlerUtils.size();
+			if(dim.getAttribute() == (CreateAttr.EMPTY)){
+				for(Concept c: dim.getConcepts()){
+					if(c.getWhen().getWhen() != null) hasConcept = true;
+					String dimConceptName = concatenateWithDot(dim.getName(), c.getName());
+					cdtHandlerUtils.put(dimConceptName, index);
+					cdtHandlers.add(new ContextElemSimpleHandler(dim.getName(), c));
+					index++;
+					for(CreateAttr attr: c.getAttributes()){
+						String dimAttName = concatenateWithDot(dim.getName(), attr.getName());
+						cache.put(dimAttName, new Object());
+						cdtHandlerUtils.put(dimAttName, index);
+						cdtHandlers.add(new ContextElemAttHandler(dim.getName(), attr.getName()));
+						index++;
+					}
+				}
+			} else {
+				String dimAttName = concatenateWithDot(dim.getName(), dim.getAttribute().getName());
+				cache.put(dimAttName, new Object());
+				cdtHandlerUtils.put(dimAttName, index);
+				cdtHandlers.add(new ContextElemAttHandler(dim.getName(),  dim.getAttribute().getName()));
 			}
+			if(hasConcept) 
+				cache.put(dim.getName(), new Object());
 		} catch (ParseException e) {
 			System.out.println("ERROR during the parsing of the request");
 			e.printStackTrace();
@@ -135,9 +161,16 @@ public class ContextManager {
 		String dim;
 		try {
 			dim = cdtParser.parseRemoveDimension(text);
-			if(cdt.removeDimensionByName(dim)) {
-				// FINIRE DI FARE AGGIORNANDO LA CACHE E GLI HANDLERS E TESTARE
+			Dimension d = cdt.getDimByName(dim);
+			if(d != null){
+				cache.remove("dim");
+				if(d.getAttribute() != CreateAttr.EMPTY){
+					String dimAttName = concatenateWithDot(dim, d.getAttribute().getName());
+					cache.remove(dimAttName);
+				}
+				cdt.removeDimension(d);
 			}
+			//non rimuovo gli handlers perche' altrimenti la lista shifta e perderei l'ordinamento
 		} catch (ParseException e) {
 			System.out.println("ERROR during the parsing of the request");
 			e.printStackTrace();

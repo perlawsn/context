@@ -31,7 +31,7 @@ public final class CDTreeParser {
         CDTParser p = new CDTParser(new StringReader(text));
         Dimension dim;
         try {
-            dim = p.CreateDimension(ctx);
+            dim = p.AddDimension(ctx);
         } catch(ParseException e) {
         	e.printStackTrace();
             throw new ParseException("Syntax error: " + ctx.getErrorDescription());    
