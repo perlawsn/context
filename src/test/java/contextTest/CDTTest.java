@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.junit.Test;
@@ -141,6 +142,20 @@ public class CDTTest {
 		 assertTrue(ctx.hasErrors());
 	 } 
 	 
-
+	 @Test
+	  public void conceptWithConstraint() throws ParseException {
+		 ParserContext ctx = new ParserContext();
+		 CDTParser parser = new CDTParser(
+				 new StringReader("CREATE CONCEPT cucina WHEN location:string > 'abc'"
+				 		+ " EXCLUDES Location.office "
+				 		+ " EXCLUDES Location.meeting_room "));
+		    Concept c = parser.CreateConcept(ctx, new TreeSet<>());
+		    assertThat(c.getName(), equalTo("cucina"));
+		    Map<String, List<String>> constraints = c.getConstraints();
+		    assertTrue(constraints.size() == 1);
+	        assertNotNull(constraints.get("Location"));
+	        assertTrue(constraints.get("Location").contains("meeting_room"));
+	        assertTrue(constraints.get("Location").contains("office"));
+	  }
 
 }

@@ -22,20 +22,20 @@ public class ContextElementTest {
 	
 	@Before
 	public void createCDT(){
-	 Concept treno = new Concept("treno", null, Collections.emptyList(), null, null, Refresh.NEVER );
-	 Concept aereo = new Concept("aereo", null, Collections.emptyList(), null, null, Refresh.NEVER );
-	 Concept bus = new Concept("bus", null, Collections.emptyList(), null, null, Refresh.NEVER );
-	 Concept nave = new Concept("nave", null, Collections.emptyList(), null, null, Refresh.NEVER );
+	 Concept treno = new Concept("treno", null, Collections.emptyList(), null, null, Refresh.NEVER, Collections.emptyMap());
+	 Concept aereo = new Concept("aereo", null, Collections.emptyList(), null, null, Refresh.NEVER, Collections.emptyMap() );
+	 Concept bus = new Concept("bus", null, Collections.emptyList(), null, null, Refresh.NEVER, Collections.emptyMap() );
+	 Concept nave = new Concept("nave", null, Collections.emptyList(), null, null, Refresh.NEVER, Collections.emptyMap() );
 	 List<Concept> concTrasporto = Arrays.asList(new Concept[]{treno, aereo, bus, nave});
 	 Dimension mezzo_trasporto = new Dimension("mezzo_trasporto", "ROOT", concTrasporto);
 	
 	 Dimension compagnia = new Dimension("compagnia", "ROOT", 
 			new CreateAttr("id_compagnia", new FunctionEvaluatedOn("contextTest.TestClass", "getIdCompagnia")));
 	
-	 Concept manuale = new Concept("manuale", null, Collections.emptyList(), null, null, Refresh.NEVER);
+	 Concept manuale = new Concept("manuale", null, Collections.emptyList(), null, null, Refresh.NEVER, Collections.emptyMap());
 	 CreateAttr ca = new CreateAttr("id_apparecchio", new FunctionEvaluatedOn("contextTest.TestClass", "getIdApparecchio"));
 	 Concept elettrico = new Concept("elettrico", null, 
-			Arrays.asList(new CreateAttr[]{ca}), null, null, Refresh.NEVER);
+			Arrays.asList(new CreateAttr[]{ca}), null, null, Refresh.NEVER, Collections.emptyMap());
 	 Dimension tipo = new Dimension("tipo", "ROOT", Arrays.asList(new Concept[]{manuale, elettrico}));
 	 cdt.setDimensions(Arrays.asList(new Dimension[]{mezzo_trasporto, compagnia, tipo}));
 	}

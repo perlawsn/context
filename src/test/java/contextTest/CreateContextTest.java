@@ -18,16 +18,18 @@ public class CreateContextTest {
 	public final String cdtString = new String(
 			"CREATE DIMENSION mezzo_trasporto "
 				+ "CREATE CONCEPT treno WHEN pressure:float > 10 WITH REFRESH COMPONENT: 5 h "
-				+ "CREATE CONCEPT aereo WHEN pressure:float > 10 WITH REFRESH COMPONENT: 5 h "
-				+ "CREATE CONCEPT bus WHEN pressure:float > 10 WITH REFRESH COMPONENT: 5 h "
+				+ "CREATE CONCEPT aereo WHEN pressure:float > 10 EXCLUDES tipo.manuale "
+					+ " WITH REFRESH COMPONENT: 5 h  "
+				+ "CREATE CONCEPT bus WHEN pressure:float > 10 "
+					+ "EXCLUDES tipo.manuale WITH REFRESH COMPONENT: 5 h "
 				+ "CREATE CONCEPT nave WHEN pressure:float > 10 WITH REFRESH COMPONENT: 5 h "
-				+ "CREATE DIMENSION compagnia "
+			+ "CREATE DIMENSION compagnia "
 				+ "CREATE ATTRIBUTE $id_compagnia EVALUATED ON 'EVERY ONE SELECT id_compagnia:string " 
 						+ " SAMPLING EVERY 5 d "
 				 		+ " EXECUTE IF EXISTS(id_compagnia)' "
 			+ "CREATE DIMENSION tipo "
-			+ "CREATE CONCEPT manuale WHEN pressure:float > 10 "
-				+ "CREATE CONCEPT elettronico " 
+			+ "CREATE CONCEPT manuale WHEN pressure:float > 10 EXCLUDES mezzo_trasporto.bus EXCLUDES mezzo_trasporto.aereo "
+			+ "CREATE CONCEPT elettronico " 
 					+ "CREATE ATTRIBUTE $id_apparecchio EVALUATED ON 'EVERY ONE SELECT id_apparecchio:string " 
 						+ " SAMPLING EVERY 5 d "
 				 		+ " EXECUTE IF EXISTS(id_apparecchio)' ");
@@ -78,7 +80,19 @@ public class CreateContextTest {
 		assertTrue(ctxManager.getContexts().size() == 0);
 	}
 	
-
+	@Test(expected= org.dei.perla.context.parser.ParseException.class)
+	public void brotherConcepts() throws org.dei.perla.context.parser.ParseException {
+		String text = "CREATE CONTEXT biglietti_CostaCrociere "
+		 		+ "ACTIVE IF mezzo_trasporto = nave AND mezzo_trasporto = aereo";
+		ctxManager.createContext(text);
+	}
+	
+	@Test(expected= org.dei.perla.context.parser.ParseException.class)
+	public void uselessContraints() throws org.dei.perla.context.parser.ParseException {
+		String text = "CREATE CONTEXT biglietti_CostaCrociere "
+		 		+ "ACTIVE IF mezzo_trasporto = aereo AND tipo = manuale";
+		ctxManager.createContext(text);
+	}
 	
 	
 }

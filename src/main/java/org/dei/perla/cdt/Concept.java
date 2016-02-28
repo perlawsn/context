@@ -2,6 +2,7 @@ package org.dei.perla.cdt;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.dei.perla.lang.query.statement.Refresh;
 
@@ -14,18 +15,20 @@ public class Concept extends Node{
 	private final PartialComponent enable;
 	private final PartialComponent disable;
 	private final Refresh refresh;
+	private final Map<String, List<String>> constraints;
 	
 	public static Concept ROOT = new Concept("ROOT", null, Collections.emptyList(), PartialComponent.EMPTY, 
-			PartialComponent.EMPTY, Refresh.NEVER);
+			PartialComponent.EMPTY, Refresh.NEVER, Collections.emptyMap());
 	
 	public Concept(String name, WhenCondition when, List<CreateAttr> atts2, 
-			PartialComponent enable, PartialComponent disable, Refresh refresh){
+			PartialComponent enable, PartialComponent disable, Refresh refresh, Map<String, List<String>> constraints){
 		super(name);
 		this.when = when; 
 		this.atts = atts2;
 		this.enable = enable;
 		this.disable = disable;
 		this.refresh = refresh;
+		this.constraints = constraints;
 	}
 	
 	public List<CreateAttr> getAttributes() {
@@ -46,6 +49,10 @@ public class Concept extends Node{
 	
 	public Refresh getRefreshPeriod(){
 		return refresh;
+	}
+	
+	public Map<String, List<String>> getConstraints() {
+		return constraints;
 	}
 	
 	private int hasAttribute(String attribute){
@@ -71,5 +78,7 @@ public class Concept extends Node{
     	StringBuffer s = new StringBuffer("");
     	return "CONCEPT " + name;
     }
+
+
     
 }

@@ -92,6 +92,8 @@ TOKEN :
     < KEYWORD_CONCEPT:     "CONCEPT" >
     |
     < KEYWORD_WHEN:     "WHEN" >
+    |
+    < EXCLUDES:     "EXCLUDES" >
 }
 
 /*
@@ -368,7 +370,7 @@ TOKEN :
     |
     < IDENTIFIER: ( <LITERAL> | <UNDERSCORE>) ( <DIGIT> | <LITERAL> | <UNDERSCORE> )* >
 	|
-	< METHOD: ( <IDENTIFIER> "." <IDENTIFIER> )+ >
+	< METHOD:  <IDENTIFIER> "." <IDENTIFIER> "." <IDENTIFIER> ( "." <IDENTIFIER> )* >
 }
 
 
@@ -518,6 +520,7 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
   PartialComponent disable = PartialComponent.EMPTY;
   Refresh refresh = Refresh.NEVER;
   Map<String, DataType> whenAttr = new HashMap<String, DataType>();
+  Map<String, List<String>> constraints = Collections.emptyMap();
 }
 {
   < KEYWORD_CREATE >
@@ -536,6 +539,9 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
 	  }
 	)?
   [
+  	constraints = Constraints(ctx)
+  ]
+  [
     LOOKAHEAD(2)
     enable = WithEnable(ctx, name)
   ]
@@ -551,9 +557,28 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
 	LOOKAHEAD(2)
     subAtts = AddConceptAttributes(ctx, atts, name)
   ]
-  { return new Concept(name, cond, subAtts, enable, disable, refresh); }
+  { return new Concept(name, cond, subAtts, enable, disable, refresh, constraints); }
 }
 
+Map<String, List<String>> Constraints(ParserContext ctx):{	Map<String, List<String>> constraints = new HashMap<String, List <String>>();
+	String dimension;
+	String concept;
+}
+{
+  (  
+   < EXCLUDES >
+   dimension = Identifier()
+   "."
+   concept = Identifier()
+   {
+     if(constraints.get(dimension) != null)
+       constraints.get(dimension).add(concept);
+     else     {    	List<String> concepts = new ArrayList<String>();
+    	concepts.add(concept);
+     	constraints.put(dimension, concepts);
+    }   }
+  )+
+  {  return constraints; }}
 
 
 PartialComponent WithEnable(ParserContext ctx, String concept):

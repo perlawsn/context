@@ -67,7 +67,7 @@ public class WhenCondition {
 		}
 		else if(attributes.size() > 0 && evaluatedOn == null) { 
 			ast = createDefaultEvaluatedOn(attributes);
-		} else {
+		} else if(evaluatedOn != null){
 	        ParserAST p = new ParserAST(new StringReader(evaluatedOn)); 
 	        try {
 	            ast = p.Statement(ctx);
@@ -88,10 +88,13 @@ public class WhenCondition {
 	            ctx.addError(compilationErrors.getErrorDescription());
 			}
 		}
-		compilationErrors = new ParserContext();
-		Expression when = whenAST.compile(DataType.BOOLEAN, compilationErrors, new AttributeOrder());
-		if(compilationErrors.getErrorCount() > 0) {
-            ctx.addError(ctx.getErrorDescription());
+		Expression when = null;
+		if(whenAST != null){
+			compilationErrors = new ParserContext();
+			when = whenAST.compile(DataType.BOOLEAN, compilationErrors, new AttributeOrder());
+			if(compilationErrors.getErrorCount() > 0) {
+	            ctx.addError(ctx.getErrorDescription());
+			}
 		}
 		return new WhenCondition(attributes, when, evaluatedOn, s);
 	}

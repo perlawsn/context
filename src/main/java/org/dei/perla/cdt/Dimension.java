@@ -55,7 +55,7 @@ public class Dimension extends Node{
 	public boolean containsConcept(String conceptName){
 		for(Concept c: concepts){
 			if(c.getName().equals(conceptName))
-				return true;
+				return true; 
 		}
 		return false;
 	}
