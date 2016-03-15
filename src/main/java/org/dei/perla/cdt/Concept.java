@@ -6,6 +6,9 @@ import java.util.Map;
 
 import org.dei.perla.lang.query.statement.Refresh;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 
 
 public class Concept extends Node{
@@ -15,13 +18,13 @@ public class Concept extends Node{
 	private final PartialComponent enable;
 	private final PartialComponent disable;
 	private final Refresh refresh;
-	private final Map<String, List<String>> constraints;
+	private final Multimap<String, String> constraints;
 	
 	public static Concept ROOT = new Concept("ROOT", null, Collections.emptyList(), PartialComponent.EMPTY, 
-			PartialComponent.EMPTY, Refresh.NEVER, Collections.emptyMap());
+			PartialComponent.EMPTY, Refresh.NEVER, ArrayListMultimap.create());
 	
 	public Concept(String name, WhenCondition when, List<CreateAttr> atts2, 
-			PartialComponent enable, PartialComponent disable, Refresh refresh, Map<String, List<String>> constraints){
+			PartialComponent enable, PartialComponent disable, Refresh refresh, Multimap<String, String> constraints){
 		super(name);
 		this.when = when; 
 		this.atts = atts2;
@@ -51,7 +54,7 @@ public class Concept extends Node{
 		return refresh;
 	}
 	
-	public Map<String, List<String>> getConstraints() {
+	public Multimap<String, String> getConstraints() {
 		return constraints;
 	}
 	

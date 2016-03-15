@@ -11,6 +11,8 @@ import org.dei.perla.context.Context;
 import org.dei.perla.context.ContextElemSimple;
 import org.dei.perla.lang.parser.ParserContext;
 
+import com.google.common.collect.Multimap;
+
 public class ContextParser {
 
 	public Context create(String text) throws ParseException  {
@@ -55,11 +57,8 @@ public class ContextParser {
 						
 						//check for useless context constraints
 						Concept concept = CDTUtils.getConcept(next.getDimension(), next.getValue());
-						Map<String, List<String>> map = concept.getConstraints();
-						boolean hasDimensionConstraint = (map.get(dimension) != null) ? true : false;
-						if(hasDimensionConstraint) {
-							List<String> concepts = map.get(dimension);
-							if(concepts.contains(ces.getValue())) {
+						Multimap<String, String> map = concept.getConstraints();
+						if(map.containsEntry(dimension, ces.getValue())) {
 								ctx.addError("The context does not respect the useless context contraints. "
 									+ "It is not possible to use " + next.getDimension() + " = " + next.getValue() +
 									" with " + dimension + " = " + ces.getValue());
@@ -67,8 +66,7 @@ public class ContextParser {
 								break;
 							}
 						}
-					}
-				} if(!valid) break;
+					} if(!valid) break;
 			} else 
 				continue;
 		}

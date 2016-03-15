@@ -17,7 +17,7 @@ import java.util.TreeSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+import com.google.common.collect.*;
 import org.dei.perla.cdt.*;
 
 import org.dei.perla.lang.parser.ast.*;
@@ -520,7 +520,7 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
   PartialComponent disable = PartialComponent.EMPTY;
   Refresh refresh = Refresh.NEVER;
   Map<String, DataType> whenAttr = new HashMap<String, DataType>();
-  Map<String, List<String>> constraints = Collections.emptyMap();
+  Multimap<String, String> constraints = ArrayListMultimap.create();
 }
 {
   < KEYWORD_CREATE >
@@ -560,7 +560,7 @@ Concept CreateConcept(ParserContext ctx, Set<String> atts):
   { return new Concept(name, cond, subAtts, enable, disable, refresh, constraints); }
 }
 
-Map<String, List<String>> Constraints(ParserContext ctx):{	Map<String, List<String>> constraints = new HashMap<String, List <String>>();
+Multimap<String, String> Constraints(ParserContext ctx):{	Multimap<String, String> constraints = ArrayListMultimap.create();
 	String dimension;
 	String concept;
 }
@@ -571,12 +571,8 @@ Map<String, List<String>> Constraints(ParserContext ctx):{	Map<String, List<St
    "."
    concept = Identifier()
    {
-     if(constraints.get(dimension) != null)
-       constraints.get(dimension).add(concept);
-     else     {    	List<String> concepts = new ArrayList<String>();
-    	concepts.add(concept);
-     	constraints.put(dimension, concepts);
-    }   }
+    constraints.put(dimension, concept);
+    }
   )+
   {  return constraints; }}
 
