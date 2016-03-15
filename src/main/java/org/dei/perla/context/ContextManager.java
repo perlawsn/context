@@ -232,6 +232,7 @@ public class ContextManager {
 		if(toDetect != null) {
 			contexts.add(toDetect);
 			toDetect.addObserver(ctxExecutor);
+			ctxExecutor.addContextToExecute(toDetect);
 			composerMgr.removePossibleContext(toDetect);
 			ContextDetector r = new ContextDetector(toDetect, cache);
 			refreshContext.add(r);

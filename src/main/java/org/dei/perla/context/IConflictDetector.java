@@ -6,4 +6,6 @@ public interface IConflictDetector {
 
 	boolean isInConflict(Context context, List<Context> activeContexts);
 	
+	boolean isInConflict(Context a, Context b);
+	
 }

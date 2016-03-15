@@ -11,7 +11,10 @@ import org.junit.Test;
 import org.dei.perla.cdt.*;
 import org.dei.perla.cdt.parser.CDTParser;
 import org.dei.perla.cdt.parser.ParseException;
+import org.dei.perla.context.Context;
 import org.dei.perla.lang.parser.*;
+
+import com.google.common.collect.Multimap;
 
 public class CDTTest {
 	
@@ -151,11 +154,11 @@ public class CDTTest {
 				 		+ " EXCLUDES Location.meeting_room "));
 		    Concept c = parser.CreateConcept(ctx, new TreeSet<>());
 		    assertThat(c.getName(), equalTo("cucina"));
-		    Map<String, List<String>> constraints = c.getConstraints();
-		    assertTrue(constraints.size() == 1);
-	        assertNotNull(constraints.get("Location"));
-	        assertTrue(constraints.get("Location").contains("meeting_room"));
-	        assertTrue(constraints.get("Location").contains("office"));
+		    Multimap<String, String> constraints = c.getConstraints();
+		    assertTrue(constraints.size() == 2);
+	        assertTrue(constraints.containsEntry("Location", "meeting_room"));
+	        assertTrue(constraints.containsEntry("Location", "office"));
 	  }
+	 
 
 }

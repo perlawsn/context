@@ -2,9 +2,7 @@ package org.dei.perla.context;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -19,6 +17,9 @@ import org.dei.perla.lang.executor.QueryException;
 import org.dei.perla.lang.executor.Record;
 import org.dei.perla.lang.query.statement.Statement;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 public class ContextExecutor implements Observer{
 
 	private IConflictDetector conflictDetector;
@@ -31,8 +32,7 @@ public class ContextExecutor implements Observer{
    	 );
   	private final PerLaSystem system;
     private final Executor exec;
-    
-    private Map<String, StatementTask[] > queriesForContext;
+    private Multimap<String, StatementTask> queriesForContext;
     
     //TO DO Aggiungere creazione e gestione tabella per salvare lo stato di un contesto
 
@@ -42,7 +42,15 @@ public class ContextExecutor implements Observer{
 		exec = new Executor(system);
 		contexts = new ArrayList<Context>();
 		activeContexts = new ArrayList<Context>();
-		queriesForContext = new HashMap<String, StatementTask[]>();
+		queriesForContext = ArrayListMultimap.create();
+	}
+	
+	public List<Context> getContexts(){
+		return new ArrayList<Context>(contexts);
+	}
+	
+	public List<Context> getActiveContext(){
+		return new ArrayList<Context>(activeContexts);
 	}
 	
 	public void addContextToExecute(Context c){
@@ -53,35 +61,58 @@ public class ContextExecutor implements Observer{
 		activeContexts.add(c);
 	}
 	
+	public void removeActiveContext(Context c){
+		int index = getIndexActiveContext(c);
+		if (index >= 0)
+			activeContexts.remove(c);
+	}
+	
+	private int getIndexActiveContext(Context ctx){
+		int i = -1;
+		if(ctx == null) 
+			return i;
+		for(Context c: activeContexts){
+			i++;
+			if(c.getName().equals(ctx.getName()))
+				break;
+		}
+		return i;
+	}
+	
 	//when a context changes its status, it must execute its actions by means of the QueryExecutor
 	@Override
 	public void update(Observable o, Object arg) {
 		Context ctx;
 		if(o instanceof Context){
 			ctx = (Context) o;
+			executeContextBehaviour(ctx);
 		}
 		else
 			return;
+	}
+		
+	private void executeContextBehaviour(Context ctx){
 		if(ctx.isActive() && !conflictDetector.isInConflict(ctx, activeContexts)){
-			StatementTask[] statTasks = new StatementTask[ctx.getEnable().size()];
-			int i=0;
+			activeContexts.add(ctx);
+			StatementTask statTask;
 			for(Statement s: ctx.getEnable()) {
 				try {
-					statTasks[i] = exec.execute(s, new ContextHandler());
+					statTask = exec.execute(s, new ContextHandler());
+					queriesForContext.put(ctx.getName(), statTask);
 				} catch (QueryException e) {
 					System.out.println("ERROR during the execution of a query in CONTEXT " + ctx.getName());
 					e.printStackTrace();
 				}
-				i++;
 			}
-			queriesForContext.put(ctx.getName(), statTasks);	
-		} else {
-			StatementTask[] tasksToStop = queriesForContext.get(ctx.getName());
-			for(int i=0; i < tasksToStop.length; i++) {
-		//		tasksToStop.stop();   si spera che Guido lo implementi
+		} else if(!ctx.isActive()){ 
+			List<StatementTask> tasksToStop = (List<StatementTask>) queriesForContext.get(ctx.getName());
+			for(StatementTask task: tasksToStop) {
+				task.stop();
 			}
-			queriesForContext.remove(ctx.getName());
+			queriesForContext.removeAll(ctx.getName());
+			removeActiveContext(ctx);
 		}
+		return;
 	}
 
 
