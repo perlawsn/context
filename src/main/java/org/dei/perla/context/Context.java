@@ -101,7 +101,8 @@ public class Context extends Observable {
 		if(!(o instanceof Context))
 			return false;
 		Context ctx = (Context) o; 
-		if(ctx.getContextElements().size() != contElements.size())
+		if(ctx.getName().equals(ctx.getName()) || 
+				ctx.getContextElements().size() != contElements.size())
 			return false;
 		for(int i = 0; i < contElements.size(); i++) {
 			ContextElement current = ctx.getContextElements().get(i);

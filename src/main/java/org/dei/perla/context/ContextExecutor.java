@@ -92,30 +92,46 @@ public class ContextExecutor implements Observer{
 	}
 		
 	private void executeContextBehaviour(Context ctx){
-		if(ctx.isActive() && !conflictDetector.isInConflict(ctx, activeContexts)){
-			activeContexts.add(ctx);
-			StatementTask statTask;
-			for(Statement s: ctx.getEnable()) {
-				try {
-					statTask = exec.execute(s, new ContextHandler());
-					queriesForContext.put(ctx.getName(), statTask);
-				} catch (QueryException e) {
-					System.out.println("ERROR during the execution of a query in CONTEXT " + ctx.getName());
-					e.printStackTrace();
-				}
+		for(Context c: activeContexts){
+			if(!ctx.isActive()){ 
+				stopContext(ctx);
+				return;
+			} 
+			boolean isInConflict = conflictDetector.isInConflict(ctx, c);
+			if(ctx.isActive() && !isInConflict){
+				executeContext(ctx);
 			}
-		} else if(!ctx.isActive()){ 
-			List<StatementTask> tasksToStop = (List<StatementTask>) queriesForContext.get(ctx.getName());
-			for(StatementTask task: tasksToStop) {
-				task.stop();
+			else if(ctx.isActive() && isInConflict) {
+				stopContext(c);
+				executeContext(c);
 			}
-			queriesForContext.removeAll(ctx.getName());
-			removeActiveContext(ctx);
-		}
+		}	
 		return;
 	}
 
+	private void executeContext(Context ctx){
+		activeContexts.add(ctx);
+		StatementTask statTask;
+		for(Statement s: ctx.getEnable()) {
+			try {
+				statTask = exec.execute(s, new ContextHandler());
+				queriesForContext.put(ctx.getName(), statTask);
+			} catch (QueryException e) {
+				System.out.println("ERROR during the execution of a query in CONTEXT " + ctx.getName());
+				e.printStackTrace();
+			}
+		}	
+	}
 
+	private void stopContext(Context ctx){
+		List<StatementTask> tasksToStop = (List<StatementTask>) queriesForContext.get(ctx.getName());
+		for(StatementTask task: tasksToStop) {
+			task.stop();
+		}
+		queriesForContext.removeAll(ctx.getName());
+		removeActiveContext(ctx);
+	}
+	
 	class ContextHandler implements StatementHandler {
 
 		public void data(Statement s, Record r) {

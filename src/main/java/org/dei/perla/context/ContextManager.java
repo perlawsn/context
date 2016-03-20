@@ -322,11 +322,6 @@ public class ContextManager {
 			this.attribute = attribute;
 		}
 
-		
-	    public void complete(Statement s) {
-			
-		}
-
 	    public void error(Statement s, Throwable cause){
 			System.out.println("ERROR in retrieving ATTRIBUTE " + attribute + " of DIMENSION " + dimension 
 			+ "\n" + cause.getMessage());
@@ -348,10 +343,6 @@ public class ContextManager {
 		public ContextElemSimpleHandler(String dimension, Concept concept) {
 			this.dimension = dimension;
 			this.concept = concept;
-		}
-
-	    public void complete(Statement s) {
-			
 		}
 
 	    public void error(Statement s, Throwable cause){
