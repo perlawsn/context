@@ -2,13 +2,24 @@ package org.dei.perla.context;
 
 
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import org.dei.perla.cdt.CDTUtils;
+import org.dei.perla.cdt.Concept;
+import org.dei.perla.cdt.CreateAttr;
+import org.dei.perla.cdt.Dimension;
+import org.dei.perla.cdt.FunctionEvaluatedOn;
+import org.dei.perla.cdt.QueryEvaluatedOn;
+import org.dei.perla.lang.executor.QueryException;
 import org.dei.perla.lang.query.expression.Expression;
 import org.dei.perla.lang.query.expression.LogicValue;
+import org.dei.perla.lang.query.statement.Statement;
 
 public class ContextDetector {
 	
@@ -26,7 +37,7 @@ public class ContextDetector {
 		this.context = context;
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		status = STOPPED;
-		this.cache = cache;
+		this.cache = cache; 
 	}
 	
 	public void checkActiveContext(){
@@ -63,17 +74,29 @@ public class ContextDetector {
     private final class CheckCondition implements Runnable {
     	
         public void run() {
+        				
+//        	for(Concept c: d.getConcepts()){
+//				c.getAttributes().forEach(a -> manageEvaluatedClause(a, d.getName()));
+//        	}
+
+        	
         	boolean isActive = true;
         	for(ContextElement element: context.getContextElements()){
 			if(element instanceof ContextElemSimple){
 				ContextElemSimple ces = (ContextElemSimple) element;
-				if(!ces.getDimension().equals(cache.get(ces.getDimension()))){
-					isActive = false;
-					break;
+				Set concepts = (Set) cache.get(ces.getDimension());
+				synchronized(concepts) {
+					if(!concepts.contains(ces.getValue())){
+						isActive = false;
+						break;
+					}
 				}
 			} else if(element instanceof ContextElemAtt){
 				ContextElemAtt cea = (ContextElemAtt) element;
 				String dimAttName = cea.getDimension() + "." + cea.getAttribute();
+				CreateAttr attribute = CDTUtils.getConceptAttribute(cea.getDimension(), cea.getAttribute());
+			//gestione retrieval attributi
+				
 				Object currentValue = cache.get(dimAttName); //valore corrente 
     			Expression e = cea.getExpression();
     			LogicValue v = (LogicValue) e.run(new Object[] {currentValue}, null);
@@ -86,6 +109,8 @@ public class ContextDetector {
         		context.setActive(isActive);
         	}
         }
+        
+
     }
 }
 

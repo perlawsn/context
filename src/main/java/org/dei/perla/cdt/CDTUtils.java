@@ -20,4 +20,8 @@ public final class CDTUtils {
 		Dimension d = cdt.getDimByName(dimension);
 		return d.getConceptContainingAtt(attribute);
 	}
+	
+	public static CreateAttr getConceptAttribute(String dimension, String attribute){
+		return cdt.getAttributeOfDim(dimension, attribute);
+	}
 }

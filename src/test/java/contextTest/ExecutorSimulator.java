@@ -10,6 +10,7 @@ import org.dei.perla.core.PerLaSystem;
 import org.dei.perla.core.fpc.Attribute;
 import org.dei.perla.core.fpc.DataType;
 import org.dei.perla.core.utils.Errors;
+import org.dei.perla.lang.SelectionStatementTask;
 import org.dei.perla.lang.StatementHandler;
 import org.dei.perla.lang.StatementTask;
 import org.dei.perla.lang.executor.QueryException;
@@ -19,6 +20,7 @@ import org.dei.perla.lang.parser.ParseException;
 import org.dei.perla.lang.parser.ParserAST;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.StatementAST;
+import org.dei.perla.lang.query.expression.Aggregate;
 import org.dei.perla.lang.query.expression.AttributeReference;
 import org.dei.perla.lang.query.expression.Expression;
 import org.dei.perla.lang.query.statement.CreationStatement;
@@ -72,8 +74,14 @@ public class ExecutorSimulator {
 	    	List<Expression> exps = select.getFields();
 	    	List<Attribute> fields = new ArrayList<Attribute>();
 	    	for(Expression e: exps){
-	    		String id = ((AttributeReference) e).getId();
-	    		fields.add(Attribute.create(id, e.getType()));
+	    		if(e instanceof AttributeReference){
+		    		String id = ((AttributeReference) e).getId();
+		    		fields.add(Attribute.create(id, e.getType()));
+	    		} else {
+	    			Aggregate agg = (Aggregate) e;
+	    			String id = ((AttributeReference)agg.getOperand()).getId();
+		    		fields.add(Attribute.create(id, e.getType()));
+	    		}
 	    	}
 	    	Object[] values = new Object[fields.size()];
 	    	DataType type;
@@ -84,7 +92,7 @@ public class ExecutorSimulator {
 	    	}
 	    	Record record = new Record(fields, values);
 	    	h.data(sel, record);
-	        return new SelectionStatementTask();
+	        return new SelectionStatementTask(null);
 	    }
 	    
 	    private Object generateRandomValue(String idType){
@@ -171,9 +179,6 @@ public class ExecutorSimulator {
 	        }
 	}
 		
-		class SelectionStatementTask implements StatementTask {	
-			
-		}
 		
 }
 

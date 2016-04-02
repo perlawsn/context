@@ -19,7 +19,7 @@ import org.dei.perla.lang.query.statement.Statement;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-
+// DA RIVEDERE AGGIUNGERE GESTIONE LOCK PER QUANDO SI RICEVONO TANTI UPDATE
 public class ContextExecutor implements Observer{
 
 	private IConflictDetector conflictDetector;
@@ -103,7 +103,8 @@ public class ContextExecutor implements Observer{
 			}
 			else if(ctx.isActive() && isInConflict) {
 				stopContext(c);
-				executeContext(c);
+				//aggiungere un lock affinchè prima termini stop contesto vecchio
+				executeContext(ctx);
 			}
 		}	
 		return;
@@ -122,13 +123,21 @@ public class ContextExecutor implements Observer{
 			}
 		}	
 	}
-
+//DA RIVEDERE
 	private void stopContext(Context ctx){
 		List<StatementTask> tasksToStop = (List<StatementTask>) queriesForContext.get(ctx.getName());
 		for(StatementTask task: tasksToStop) {
 			task.stop();
 		}
 		queriesForContext.removeAll(ctx.getName());
+		for(Statement s: ctx.getDisable()) {
+			try {
+				exec.execute(s, new ContextHandler());
+			} catch (QueryException e) {
+				System.out.println("ERROR during the execution of a query in CONTEXT " + ctx.getName());
+				e.printStackTrace();
+			}
+		}	
 		removeActiveContext(ctx);
 	}
 	

@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.dei.perla.cdt.CDT;
@@ -148,7 +150,7 @@ public class ContextManager {
 				cdtHandlers.add(new ContextElemAttHandler(dim.getName(),  dim.getAttribute().getName()));
 			}
 			if(hasConcept) 
-				cache.put(dim.getName(), new Object());
+				cache.put(dim.getName(), new HashSet<>());
 		} catch (ParseException e) {
 			System.out.println("ERROR during the parsing of the request");
 			e.printStackTrace();
@@ -216,7 +218,7 @@ public class ContextManager {
 				}
 			}
 			if(hasConcept)
-				cache.put(d.getName(), new Object());
+				cache.put(d.getName(), new HashSet<>());
 		}
 	}
 	
@@ -357,9 +359,17 @@ public class ContextManager {
 		public void data(Statement stat, Record record) {
 			Expression when = concept.getWhen().getWhen();
 			LogicValue v = (LogicValue) when.run(record.getValues(), null);
-			 if (v.toBoolean()) {
-				cache.put(dimension, concept.getName()); 
-	     	 }
+			if(cache.get(dimension) instanceof Set){
+				Set concepts = (Set) cache.get(dimension);
+				synchronized(concepts) {
+				 if (v.toBoolean()) 
+						concepts.add(concept.getName());
+				 else 
+					 concepts.remove(concept.getName());
+				}
+			}else
+				System.out.println("In the cache, dimension " + dimension + 
+						"does not have a set of concepts");
 		}
 		
 		
