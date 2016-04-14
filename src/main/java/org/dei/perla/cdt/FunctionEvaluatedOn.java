@@ -3,76 +3,59 @@ package org.dei.perla.cdt;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.dei.perla.context.Utility;
 import org.dei.perla.lang.parser.ParserContext;
 
 public class FunctionEvaluatedOn implements EvaluatedOn {
 	
-	private final String className;
-	private final String methodName;
+	private final String function;
+	private final Object[] params;
 
-	public FunctionEvaluatedOn(String className, String methodName){
-		this.className = className;
-		this.methodName = methodName;
+	public FunctionEvaluatedOn(String function, Object[] params){
+		this.function = function;
+		this.params = params;
 	}
 	
 	@Override
 	public String getStringEvaluatedOn() {
-		return className + "." + methodName;
+		return function;
 	}
 	
-	public String getClassName(){
-		return className;
+	public Object[] params(){
+		return params;
 	}
 	
-	public String getMethodName(){
-		return methodName;
-	}
 	
 	public Object computeValue() {
+		Utility u = new Utility();
 		Object result = null;
-		Class classe = Class.class;
-		try {
-			classe = Class.forName(className);
-		} catch (ClassNotFoundException e) {
-			return null;
+		if(!u.existsFunction(function)){
+			System.out.println("The function " + function + " does not exists");
+			return result;
 		}
-		Method getFunctionName;
-		try {
-			getFunctionName = classe.getDeclaredMethod(methodName, null);
-		} catch (NoSuchMethodException | SecurityException e) {
-			return null;
-		}
-		try {
-			result = getFunctionName.invoke(classe.newInstance());
-		} catch (IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | InstantiationException e) {
-			e.printStackTrace();
+		else {
+			result = u.retrieveValueFunction(function, null);
 		}
 		return result;
 	}
 	
 	public static FunctionEvaluatedOn create(String attName, String evaluatedOn, ParserContext ctx, String src){
-		int index = evaluatedOn.lastIndexOf( '.' );
-		int len = evaluatedOn.length();
-		String nameClass = evaluatedOn.substring(0,index);
-		String nameMethod = evaluatedOn.substring(index+1, len);
-		Class classe = Class.class;
-		try {
-			classe = Class.forName(nameClass);	
-		} catch (ClassNotFoundException e) {
-			ctx.addError("Exception in defining the EVALUATED ON clause "
-            		+ "of ATTRIBUTE " + attName + " OF " + src + "\nClass name may be wrong");
-			nameClass = "";
+		if(evaluatedOn.contains("()")){
+			int len = evaluatedOn.length()-2;
+			evaluatedOn = evaluatedOn.substring(0, len);
 		}
-		Method getNameFunction;
-		try {
-			getNameFunction = classe.getDeclaredMethod(nameMethod, null);
-		} catch (NoSuchMethodException | SecurityException e) {
-			ctx.addError("Exception in defining the EVALUATED ON clause "
-            		+ "of ATTRIBUTE " + attName + " OF " + src + "\nMethod name may be wrong");
-			nameMethod = "";
+		Utility u = new Utility();
+		if(!u.existsFunction(evaluatedOn)){
+			ctx.addError("The function " + evaluatedOn + " does not exist");
 		}
-		return new FunctionEvaluatedOn(nameClass, nameMethod);
+		else {
+			Object result = u.retrieveValueFunction(evaluatedOn, null);
+			if (result == null) 
+				ctx.addError("The function " + evaluatedOn + " returned a null result");
+		}
+				//TODO aggiungere parametri
+				return new FunctionEvaluatedOn(evaluatedOn, null);
+
 	}
 
 }
