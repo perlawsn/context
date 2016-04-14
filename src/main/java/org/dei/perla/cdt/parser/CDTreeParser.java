@@ -6,10 +6,15 @@ import org.dei.perla.cdt.CDT;
 import org.dei.perla.cdt.Dimension;
 import org.dei.perla.lang.parser.ParserContext;
 
+import com.mysql.jdbc.StringUtils;
+
 
 public final class CDTreeParser {
 
     public CDT parseCDT(String text) throws ParseException  {
+    	if(StringUtils.isEmptyOrWhitespaceOnly(text)){
+    		throw new ParseException("Text is empty");
+    	}
         ParserContext ctx = new ParserContext();
         CDT cdt;
 

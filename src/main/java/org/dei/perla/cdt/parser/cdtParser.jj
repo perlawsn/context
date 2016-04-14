@@ -369,8 +369,10 @@ TOKEN :
     < #HEXADECIMAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
     |
     < IDENTIFIER: ( <LITERAL> | <UNDERSCORE>) ( <DIGIT> | <LITERAL> | <UNDERSCORE> )* >
+    |
+    < METHOD: < IDENTIFIER > "(" ")">
 	|
-	< METHOD:  <IDENTIFIER> "." <IDENTIFIER> "." <IDENTIFIER> ( "." <IDENTIFIER> )* >
+	< METHOD_PACKAGE:  <IDENTIFIER> "." <IDENTIFIER> "." <IDENTIFIER> ( "." <IDENTIFIER> )* >   
 }
 
 
@@ -1239,8 +1241,17 @@ MethodAST ReflectionMethod(ParserContext ctx) :
 	String methodName;
 }
 {
-	methodName = Method()
+	methodName = PackageName()
 	{ return MethodAST.create(methodName, ctx); }
+}
+
+String PackageName() :
+{
+    Token value;
+}
+{
+    value = <METHOD_PACKAGE>
+    { return value.image; }
 }
 
 String Method() :
