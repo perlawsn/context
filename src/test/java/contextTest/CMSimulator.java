@@ -1,13 +1,20 @@
 package contextTest;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.dei.perla.cdt.CDT;
 import org.dei.perla.cdt.Concept;
 import org.dei.perla.cdt.CreateAttr;
@@ -16,7 +23,11 @@ import org.dei.perla.cdt.FunctionEvaluatedOn;
 import org.dei.perla.cdt.QueryEvaluatedOn;
 import org.dei.perla.cdt.parser.CDTreeParser;
 import org.dei.perla.cdt.parser.ParseException;
-import org.dei.perla.context.*;
+import org.dei.perla.context.Context;
+import org.dei.perla.context.ContextDetector;
+import org.dei.perla.context.ContextExecutor;
+import org.dei.perla.context.IComposerManager;
+import org.dei.perla.context.IConflictDetector;
 import org.dei.perla.context.parser.ContextParser;
 import org.dei.perla.core.PerLaSystem;
 import org.dei.perla.core.Plugin;
@@ -45,10 +56,10 @@ public class CMSimulator {
 	
 	private final List<Plugin> plugins;
     private final PerLaSystem system;
-    private final ExecutorSimulator queryExec;
+    private final Executor queryExec;
 
 	//cache for quickly retrieving the current value of a dimension
-	private static Map<String, Object> cache;
+	private static Map<String, Set<Object>> cache;
 	
 	private Map<String, Integer> cdtHandlerUtils;
 	private List<StatementHandler> cdtHandlers;
@@ -61,10 +72,10 @@ public class CMSimulator {
 		refreshContext = new ArrayList<ContextDetector>();
 		ctxExecutor = new ContextExecutor(conflictDetector);
 		this.composerMgr = composerMgr;
-		cache = new ConcurrentHashMap<String, Object>();
+		cache = new ConcurrentHashMap<String, Set<Object>>();
 		plugins = Arrays.asList(new SimulatorMapperFactory(), new SimulatorChannelPlugin());
 		system = new PerLaSystem(plugins);
-		queryExec = new ExecutorSimulator(system);
+		queryExec = new Executor(system);
 		cdtHandlerUtils = new HashMap<String, Integer>();
 		cdtHandlers = new ArrayList<>();
 	}
@@ -79,6 +90,18 @@ public class CMSimulator {
 	
 	public List<Context> getContexts() {
 		return contexts;
+	}
+	
+	//serve per i test
+	public void addConceptToCache(String dimension, String concept){
+		Set concepts = (Set) cache.get(dimension);
+		concepts.add(concept);
+	}
+	
+	//serve per i test
+	public void removeConceptToCache(String dimension, String concept){
+		Set concepts = (Set) cache.get(dimension);
+		concepts.remove(concept);
 	}
 	
 	public Context getContext(String ctxName){
@@ -97,6 +120,10 @@ public class CMSimulator {
 		return -1;
 	}
 	
+	/*
+	 * returns the shallow copy of the cache containing the value of the Dimension and attribute
+	 * at the moment of the method invocation
+	 */
 	public Map<String, Object> getCache(){
 		Map<String, Object> shallowCopy = new HashMap<String, Object>();
 		shallowCopy.putAll(cache);
@@ -114,6 +141,18 @@ public class CMSimulator {
 		initCache(cdt);
 	}
 	
+	public void createCDTFromFile(String path) throws ParseException{
+		try (BufferedReader br = new BufferedReader(new FileReader(path)))
+		{
+			String cdtText = IOUtils.toString(br);
+			cdt = cdtParser.parseCDT(cdtText);
+			initCache(cdt);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Impossible to read the file " + path);
+		} 
+	}
+	
 	public void addDimension(String text){
 		if(cdt==null)
 			throw new RuntimeException("Before adding a DIMENSION, it is necessary to create the CDT");
@@ -121,9 +160,31 @@ public class CMSimulator {
 		try {
 			dim = cdtParser.parseAddDimension(text);
 			cdt.addDimension(dim);
-			for(Concept c: dim.getConcepts()){
-				// FINIRE DI FARE AGGIORNANDO LA CACHE E GLI HANDLERS E TESTARE
+			boolean hasConcept = false;
+			int index = cdtHandlerUtils.size();
+			if(dim.getAttribute() == (CreateAttr.EMPTY)){
+				for(Concept c: dim.getConcepts()){
+					if(c.getWhen().getWhen() != null) hasConcept = true;
+					String dimConceptName = concatenateWithDot(dim.getName(), c.getName());
+					cdtHandlerUtils.put(dimConceptName, index);
+					cdtHandlers.add(new ContextElemSimpleHandler(dim.getName(), c));
+					index++;
+					for(CreateAttr attr: c.getAttributes()){
+						String dimAttName = concatenateWithDot(dim.getName(), attr.getName());
+						cache.put(dimAttName, new HashSet<>());
+						cdtHandlerUtils.put(dimAttName, index);
+						cdtHandlers.add(new ContextElemAttHandler(dim.getName(), attr.getName()));
+						index++;
+					}
+				}
+			} else {
+				String dimAttName = concatenateWithDot(dim.getName(), dim.getAttribute().getName());
+				cache.put(dimAttName, new HashSet<>());
+				cdtHandlerUtils.put(dimAttName, index);
+				cdtHandlers.add(new ContextElemAttHandler(dim.getName(),  dim.getAttribute().getName()));
 			}
+			if(hasConcept) 
+				cache.put(dim.getName(), new HashSet<>());
 		} catch (ParseException e) {
 			System.out.println("ERROR during the parsing of the request");
 			e.printStackTrace();
@@ -136,9 +197,16 @@ public class CMSimulator {
 		String dim;
 		try {
 			dim = cdtParser.parseRemoveDimension(text);
-			if(cdt.removeDimensionByName(dim)) {
-				// FINIRE DI FARE AGGIORNANDO LA CACHE E GLI HANDLERS E TESTARE
+			Dimension d = cdt.getDimByName(dim);
+			if(d != null){
+				cache.remove("dim");
+				if(d.getAttribute() != CreateAttr.EMPTY){
+					String dimAttName = concatenateWithDot(dim, d.getAttribute().getName());
+					cache.remove(dimAttName);
+				}
+				cdt.removeDimension(d);
 			}
+			//non rimuovo gli handlers perche' altrimenti la lista shifta e perderei l'ordinamento
 		} catch (ParseException e) {
 			System.out.println("ERROR during the parsing of the request");
 			e.printStackTrace();
@@ -162,7 +230,7 @@ public class CMSimulator {
 			if(d.getAttribute() != CreateAttr.EMPTY){
 				CreateAttr att = d.getAttribute();
 				dimAttName = concatenateWithDot(d.getName(), att.getName());
-				cache.put(dimAttName, new Object());
+				cache.put(dimAttName, new HashSet<>());
 				cdtHandlerUtils.put(dimAttName, i);
 				cdtHandlers.add(new ContextElemAttHandler(d.getName(), att.getName()));
 				i++;
@@ -176,7 +244,7 @@ public class CMSimulator {
 					i++;
 					for(CreateAttr attr: c.getAttributes()){
 						dimAttName = concatenateWithDot(d.getName(), attr.getName());
-						cache.put(dimAttName, new Object());
+						cache.put(dimAttName, new HashSet<>());
 						cdtHandlerUtils.put(dimAttName, i);
 						cdtHandlers.add(new ContextElemAttHandler(d.getName(), attr.getName()));
 						i++;
@@ -184,7 +252,7 @@ public class CMSimulator {
 				}
 			}
 			if(hasConcept)
-				cache.put(d.getName(), new Object());
+				cache.put(d.getName(), new HashSet<>());
 		}
 	}
 	
@@ -200,6 +268,7 @@ public class CMSimulator {
 		if(toDetect != null) {
 			contexts.add(toDetect);
 			toDetect.addObserver(ctxExecutor);
+			ctxExecutor.addContextToExecute(toDetect);
 			composerMgr.removePossibleContext(toDetect);
 			ContextDetector r = new ContextDetector(toDetect, cache);
 			refreshContext.add(r);
@@ -271,7 +340,11 @@ public class CMSimulator {
 		else if(att.getEvaluatedOn() instanceof FunctionEvaluatedOn) {
 			FunctionEvaluatedOn function = (FunctionEvaluatedOn) att.getEvaluatedOn();
 			String dimAttName = concatenateWithDot(dimension, att.getName());
-			cache.put(dimAttName, function.computeValue());
+			Object value = function.computeValue();
+			synchronized(cache.get(dimAttName)){
+				Set values = cache.get(dimAttName);
+				values.add(value);
+			}
 		}
 		else 
 			throw new RuntimeException("Unexpected EVALUATION CLAUSE of ATTRIBUTE " + att.getName()
@@ -284,14 +357,10 @@ public class CMSimulator {
 		private final String dimension;
 		private final String attribute;
 		
+		
 		public ContextElemAttHandler(String dimension, String attribute) {
 			this.dimension = dimension;
 			this.attribute = attribute;
-		}
-
-		
-	    public void complete(Statement s) {
-			
 		}
 
 	    public void error(Statement s, Throwable cause){
@@ -302,7 +371,16 @@ public class CMSimulator {
 		public void data(Statement stat, Record record) {
 			Object value = record.getValues()[0];
 			String dimensionAtt = dimension + "." + attribute;
-			cache.put(dimensionAtt, value);
+			synchronized(cache.get(dimensionAtt)){
+				Set values = cache.get(dimensionAtt);
+				values.add(value);
+			}
+		}
+
+		@Override
+		public void complete() {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 	
@@ -317,10 +395,6 @@ public class CMSimulator {
 			this.concept = concept;
 		}
 
-	    public void complete(Statement s) {
-			
-		}
-
 	    public void error(Statement s, Throwable cause){
 			System.out.println("ERROR during the execution of the query for CONCEPT " + concept.getName() 
 					+ " of DIMENSION " + dimension + "\n" + cause.getMessage());
@@ -333,9 +407,19 @@ public class CMSimulator {
 		public void data(Statement stat, Record record) {
 			Expression when = concept.getWhen().getWhen();
 			LogicValue v = (LogicValue) when.run(record.getValues(), null);
-			 if (v.toBoolean()) {
-				cache.put(dimension, concept.getName()); 
-	     	 }
+				synchronized(cache.get(dimension)){
+				Set concepts = cache.get(dimension);
+				 if (v.toBoolean()) 
+						concepts.add(concept.getName());
+				 else 
+					 concepts.remove(concept.getName());
+			}
+		}
+
+		@Override
+		public void complete() {
+			// TODO Auto-generated method stub
+			
 		}
 		
 		
