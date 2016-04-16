@@ -74,12 +74,6 @@ public class ContextDetector {
     private final class CheckCondition implements Runnable {
     	
         public void run() {
-        				
-//        	for(Concept c: d.getConcepts()){
-//				c.getAttributes().forEach(a -> manageEvaluatedClause(a, d.getName()));
-//        	}
-
-        	
         	boolean isActive = true;
         	for(ContextElement element: context.getContextElements()){
 			if(element instanceof ContextElemSimple){

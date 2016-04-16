@@ -4,6 +4,9 @@ import static org.junit.Assert.*;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.dei.perla.cdt.CDT;
@@ -13,6 +16,10 @@ import org.dei.perla.context.ComposerManager;
 import org.dei.perla.context.ConflictDetector;
 import org.dei.perla.context.Context;
 import org.dei.perla.context.ContextManager;
+import org.dei.perla.core.PerLaSystem;
+import org.dei.perla.core.Plugin;
+import org.dei.perla.core.channel.http.HttpChannelPlugin;
+import org.dei.perla.core.channel.simulator.SimulatorChannelPlugin;
 import org.dei.perla.lang.parser.Parser;
 import org.dei.perla.lang.parser.StatementParseException;
 import org.dei.perla.lang.query.statement.IfEvery;
@@ -82,10 +89,18 @@ public class ContextManagerTest {
 			"ACTIVE IF Location = office AND Env_Temp = cold "); 
 	
 	private CMSimulator ctxManager;
-	
+	private static final List<Plugin> plugins;
+	  static {
+	        List<Plugin> ps = new ArrayList<>();
+	        ps.add(new HttpChannelPlugin());
+	        ps.add(new SimulatorChannelPlugin());
+	        plugins = Collections.unmodifiableList(ps);
+	    }
+	  PerLaSystem system = new PerLaSystem(plugins);
+	  
 	@Before
 	public void init() throws ParseException{
-		ctxManager = new CMSimulator(new ComposerManager(), new ConflictDetector());
+		ctxManager = new CMSimulator(system, new ComposerManager(), new ConflictDetector());
 		ctxManager.createCDT(cdt);
 	}
 

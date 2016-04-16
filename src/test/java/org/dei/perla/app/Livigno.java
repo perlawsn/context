@@ -62,7 +62,7 @@ public class Livigno {
 	    
     public static void main( String[] args ){
     	initSystem();
-    	ctxManager = new CMSimulator(new ComposerManager(), new ConflictDetector());
+    	ctxManager = new CMSimulator(system, new ComposerManager(), new ConflictDetector());
     	try {
 			ctxManager.createCDTFromFile(fileCDT);
 			System.out.println(ctxManager.getCDT());
@@ -87,8 +87,8 @@ public class Livigno {
     	
        try {
 			system.injectDescriptor(new FileInputStream(SLOPE_1_SENSOR));
-			system.injectDescriptor(new FileInputStream(SLOPE_2_SENSOR)); 
-			system.injectDescriptor(new FileInputStream(WEATHER_SENSOR)); 
+//			system.injectDescriptor(new FileInputStream(SLOPE_2_SENSOR)); 
+//			system.injectDescriptor(new FileInputStream(WEATHER_SENSOR)); 
 		} catch (FileNotFoundException | FpcCreationException e) {
 			e.printStackTrace();
 		}

@@ -47,9 +47,6 @@ public class ContextManager {
 	private final IComposerManager composerMgr;
 	private List<ContextDetector> refreshContext;
 	private final ContextExecutor ctxExecutor;
-	
-	private final List<Plugin> plugins;
-    private final PerLaSystem system;
     private final Executor queryExec;
 
 	//cache for quickly retrieving the current value of a dimension
@@ -58,7 +55,7 @@ public class ContextManager {
 	private Map<String, Integer> cdtHandlerUtils;
 	private List<StatementHandler> cdtHandlers;
 	
-	public ContextManager(IComposerManager composerMgr, IConflictDetector conflictDetector) {
+	public ContextManager(PerLaSystem system, IComposerManager composerMgr, IConflictDetector conflictDetector) {
 		cdt = null;
 		cdtParser = new CDTreeParser();
 		ctxParser = new ContextParser();
@@ -67,8 +64,6 @@ public class ContextManager {
 		ctxExecutor = new ContextExecutor(conflictDetector);
 		this.composerMgr = composerMgr;
 		cache = new ConcurrentHashMap<String, Set<Object>>();
-		plugins = Arrays.asList(new SimulatorMapperFactory(), new SimulatorChannelPlugin());
-		system = new PerLaSystem(plugins);
 		queryExec = new Executor(system);
 		cdtHandlerUtils = new HashMap<String, Integer>();
 		cdtHandlers = new ArrayList<>();

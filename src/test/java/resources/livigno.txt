@@ -8,86 +8,86 @@ CREATE DIMENSION SnowCondition
  CREATE CONCEPT Icy1 WHEN temperature:float < -5.0 AND snow_density:float > 0.30 
   EVALUATED ON "EVERY 5s SELECT avg(temperature:float, 5s), avg(snow_density:float, 5s)
   SAMPLING EVERY 1 s 
-  EXECUTE IF position = 'pista1' REQUIRE temperature, snow_density"
+  EXECUTE IF position = 'pista1' REQUIRE temperature:float, snow_density:float"
  
  CREATE CONCEPT Soft1 WHEN temperature:float BETWEEN -5.0 AND 6.0 
   AND snow_density:float < 0.12 
   EVALUATED ON "EVERY 5s SELECT avg(temperature:float,5s), avg(snow_density:float,5s)
   SAMPLING EVERY 1 m 
-  EXECUTE IF position = 'pista1' REQUIRE temperature, snow_density"
+  EXECUTE IF position = 'pista1' REQUIRE temperature:float, snow_density:float"
 
 CREATE CONCEPT Slushy1 WHEN temperature:float > 8.0 
   AND snow_density:float BETWEEN 0.12 AND 0.29 
   EVALUATED ON "EVERY 5s SELECT avg(temperature:float,5s), avg(snow_density:float,5s)
   SAMPLING EVERY 1 s 
-  EXECUTE IF position = 'pista1' REQUIRE temperature, snow_density"	
+  EXECUTE IF position = 'pista1' REQUIRE temperature:float, snow_density:float"	
   
   CREATE CONCEPT Icy2 WHEN temperature:float < -5.0 AND snow_density:float > 0.30 
   EVALUATED ON "EVERY 5s SELECT AVG(temperature:float,5s), avg(snow_density:float,5s)
   SAMPLING EVERY 1 s 
-  EXECUTE IF position = 'pista2' REQUIRE temperature, snow_density"
+  EXECUTE IF position = 'pista2' REQUIRE temperature:float, snow_density:float"
  
  CREATE CONCEPT Soft2 WHEN temperature:float BETWEEN -5.0 AND 6.0 
   AND snow_density:float < 0.12 
   EVALUATED ON "EVERY 5s SELECT avg(temperature:float,5s), avg(snow_density:float,5s)
   SAMPLING EVERY 1 s
-  EXECUTE IF position = 'pista2' REQUIRE temperature, snow_density"
+  EXECUTE IF position = 'pista2' REQUIRE temperature:float, snow_density:float"
   
   CREATE CONCEPT Slushy2 WHEN temperature:float > 8.0 
   AND snow_density:float BETWEEN 0.12 AND 0.29 
   EVALUATED ON "EVERY 5s SELECT avg(temperature:float,5s), avg(snow_density:float,5s)
   SAMPLING EVERY 1 s 
-  EXECUTE IF position = 'pista2' REQUIRE temperature, snow_density"
+  EXECUTE IF position = 'pista2' REQUIRE temperature:float, snow_density:float"
 
  CREATE CONCEPT LOW WHEN snow_depth:float < 10.0 
  EVALUATED ON 'EVERY ONE SELECT avg(snow_depth:float,1d)
- SAMPLING EVERY 1 d EXECUTE REQUIRE snow_depth'	
+ SAMPLING EVERY 1 d EXECUTE REQUIRE snow_depth:float'	
  
 CREATE DIMENSION Wind
  CREATE CONCEPT Weak WHEN wind_speed:float < 50.0
  EVALUATED ON 'EVERY 5s SELECT avg(wind_speed:float,5s) SAMPLING EVERY 1s
- EXECUTE REQUIRE wind_speed'
+ EXECUTE REQUIRE wind_speed:float'
  
- CREATE CONCEPT Normal WHEN wind_speed:float BETWEEN 50.0 AND 100.0
-  EVALUATED ON 'EVERY 5s SELECT avg(wind_speed:float,5s) SAMPLING EVERY 1s
-   EXECUTE REQUIRE wind_speed'
+ CREATE CONCEPT Normal WHEN wind_speed:float > 50.0 AND wind_speed:float < 100.0
+ EVALUATED ON 'EVERY 5s SELECT avg(wind_speed:float,5s) SAMPLING EVERY 1s
+ EXECUTE REQUIRE wind_speed:float'
  
  CREATE CONCEPT Strong WHEN wind_speed:float > 100.0
   EVALUATED ON 'EVERY 5s SELECT avg(wind_speed:float,5s) SAMPLING EVERY 1s
-  EXECUTE REQUIRE wind_speed'
+  EXECUTE REQUIRE wind_speed:float'
 
 CREATE DIMENSION Visibility
  CREATE CONCEPT Limited WHEN visibility:float < 50.0
   EVALUATED ON 'EVERY 5s SELECT avg(visibility:float,5s) SAMPLING EVERY 1s
-  EXECUTE REQUIRE visibility'
+  EXECUTE REQUIRE visibility:float'
 
   CREATE CONCEPT Good WHEN visibility:float > 50.0
   EVALUATED ON 'EVERY 5s SELECT avg(visibility:float,5s) SAMPLING EVERY 1s
-  EXECUTE REQUIRE visibility'
+  EXECUTE REQUIRE visibility:float'
   
 CREATE DIMENSION WeatherCondition
  CREATE CONCEPT Rain WHEN rain:float > 10.0 
  EVALUATED ON 'EVERY 5s SELECT avg(rain:float,5s) 
  SAMPLING EVERY 1s
- EXECUTE REQUIRE rain'
+ EXECUTE REQUIRE rain:float'
 
 CREATE CONCEPT Snow WHEN snow_fall:float > 10.0 
  EVALUATED ON 'EVERY 5s SELECT avg(snow_fall:float,5s) 
  SAMPLING EVERY 1s
- EXECUTE REQUIRE snow_fall'
+ EXECUTE REQUIRE snow_fall:float'
  WITH ENABLE COMPONENT: "EVERY 5s SELECT avg(snow_fall:float,1s) 
- SAMPLING EVERY 1ms
- EXECUTE REQUIRE snow_fall"
+ SAMPLING EVERY 1s
+ EXECUTE REQUIRE snow_fall:float"
 
 CREATE CONCEPT Fog WHEN fog:float > 0.5
  EVALUATED ON 'EVERY 5s SELECT avg(fog:float,5s) 
   SAMPLING EVERY 1s
-  EXECUTE REQUIREfog'
+  EXECUTE REQUIRE fog:float'
 
- CREATE CONCEPT Sunny WHEN brightness:float > 0.5
+ CREATE CONCEPT Sunny WHEN brigthness:float > 0.5
  EVALUATED ON 'EVERY 5s SELECT avg(brightness:float, 5s)
   SAMPLING EVERY 1 s
-  EXECUTE IF EXISTS brightness'
+  EXECUTE REQUIRE brigthness:float'
 
 CREATE DIMENSION Season
  CREATE CONCEPT Autumn WHEN getMonth() BETWEEN 8 AND 11
@@ -96,8 +96,8 @@ CREATE DIMENSION Season
 
 CREATE DIMENSION Place
  CREATE CONCEPT PISTA WHEN position:string LIKE 'pista%'
- EVALUATED ON 'EVERY ONE SELECT position:string SAMPLING EVERY 1d EXECUTE REQUIRE position'
+ EVALUATED ON 'EVERY ONE SELECT position:string SAMPLING EVERY 1d EXECUTE REQUIRE position:string'
  
  CREATE CONCEPT Skilift WHEN position:string = 'skilift'
- EVALUATED ON 'EVERY ONE SELECT position:string SAMPLING EVERY 1d EXECUTE REQUIRE position'
+ EVALUATED ON 'EVERY ONE SELECT position:string SAMPLING EVERY 1d EXECUTE REQUIRE position:string'
  

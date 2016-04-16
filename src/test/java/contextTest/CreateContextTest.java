@@ -1,12 +1,23 @@
 package contextTest;
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.dei.perla.cdt.parser.ParseException;
 import org.dei.perla.context.ComposerManager;
 import org.dei.perla.context.ConflictDetector;
 import org.dei.perla.context.Context;
 import org.dei.perla.context.ContextManager;
 import org.dei.perla.context.IComposerManager;
+import org.dei.perla.core.PerLaSystem;
+import org.dei.perla.core.Plugin;
+import org.dei.perla.core.channel.http.HttpChannelPlugin;
+import org.dei.perla.core.channel.simulator.SimulatorChannelPlugin;
+import org.dei.perla.core.channel.simulator.SimulatorMapperFactory;
+import org.dei.perla.core.message.json.JsonMapperFactory;
+import org.dei.perla.core.message.urlencoded.UrlEncodedMapperFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,6 +25,14 @@ import org.junit.Test;
 public class CreateContextTest {
 	
 	public ContextManager ctxManager;
+	private static final List<Plugin> plugins;
+	  static {
+	        List<Plugin> ps = new ArrayList<>();
+	        ps.add(new HttpChannelPlugin());
+	        ps.add(new SimulatorChannelPlugin());
+	        plugins = Collections.unmodifiableList(ps);
+	    }
+	  PerLaSystem system = new PerLaSystem(plugins);
 
 	public final String cdtString = new String(
 			"CREATE DIMENSION mezzo_trasporto "
@@ -36,7 +55,7 @@ public class CreateContextTest {
 	
 	@Before
 	public void createCtxManager() throws ParseException{
-		ctxManager = new ContextManager(new ComposerManager(), new ConflictDetector());
+		ctxManager = new ContextManager(system, new ComposerManager(), new ConflictDetector());
 		ctxManager.createCDT(cdtString);
 	}
 	

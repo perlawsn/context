@@ -54,8 +54,6 @@ public class CMSimulator {
 	private List<ContextDetector> refreshContext;
 	private final ContextExecutor ctxExecutor;
 	
-	private final List<Plugin> plugins;
-    private final PerLaSystem system;
     private final Executor queryExec;
 
 	//cache for quickly retrieving the current value of a dimension
@@ -64,7 +62,7 @@ public class CMSimulator {
 	private Map<String, Integer> cdtHandlerUtils;
 	private List<StatementHandler> cdtHandlers;
 	
-	public CMSimulator(IComposerManager composerMgr, IConflictDetector conflictDetector) {
+	public CMSimulator(PerLaSystem system, IComposerManager composerMgr, IConflictDetector conflictDetector) {
 		cdt = null;
 		cdtParser = new CDTreeParser();
 		ctxParser = new ContextParser();
@@ -73,8 +71,6 @@ public class CMSimulator {
 		ctxExecutor = new ContextExecutor(conflictDetector);
 		this.composerMgr = composerMgr;
 		cache = new ConcurrentHashMap<String, Set<Object>>();
-		plugins = Arrays.asList(new SimulatorMapperFactory(), new SimulatorChannelPlugin());
-		system = new PerLaSystem(plugins);
 		queryExec = new Executor(system);
 		cdtHandlerUtils = new HashMap<String, Integer>();
 		cdtHandlers = new ArrayList<>();
@@ -329,6 +325,7 @@ public class CMSimulator {
 						//it retrieves the handler for the execution of the query 
 						int index = this.cdtHandlerUtils.get(cdtHandlerName);
 						try {
+							System.out.println(c + " " + queryWhen);
 							queryExec.execute(queryWhen, cdtHandlers.get(index));
 						} catch (QueryException e) {
 							System.out.println("ERROR during the execution of the query for CONCEPT "
@@ -424,8 +421,8 @@ public class CMSimulator {
 		*/
 		public void data(Statement stat, Record record) {
 			Expression when = concept.getWhen().getWhen();
-			
 			LogicValue v = (LogicValue) when.run(record.getValues(), null);
+			System.out.println("sono dentro data di " + dimension + "." + concept + " logicValue " + v);
 				synchronized(cache.get(dimension)){
 				Set concepts = cache.get(dimension);
 				 if (v.toBoolean()) 

@@ -18,6 +18,7 @@ import org.dei.perla.lang.parser.OnEmptySelection;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.*;
 import org.dei.perla.lang.query.expression.BoolOperation;
+import org.dei.perla.lang.query.statement.GroupBy;
 import org.dei.perla.lang.query.statement.RatePolicy;
 import org.dei.perla.lang.query.statement.Refresh;
 import org.dei.perla.lang.query.statement.RefreshType;
