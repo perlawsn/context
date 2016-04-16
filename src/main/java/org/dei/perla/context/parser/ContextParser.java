@@ -2,7 +2,6 @@ package org.dei.perla.context.parser;
 
 import java.io.StringReader;
 import java.util.List;
-import java.util.Map;
 
 import org.dei.perla.cdt.CDTUtils;
 import org.dei.perla.cdt.Concept;
@@ -15,23 +14,24 @@ import com.google.common.collect.Multimap;
 
 public class ContextParser {
 
-	public Context create(String text) throws ParseException  {
+	public List<Context> create(String text) throws ParseException  {
         ParserContext ctx = new ParserContext();
-        Context context;
+        List<Context> contexts;
         ContParser p = new ContParser(new StringReader(text));
         try {
-            context = p.CreateContext(ctx);
+            contexts = p.CreateContexts(ctx);
         } catch(ParseException e) {
             throw new ParseException("Syntax error: " + ctx.getErrorDescription());
         }
         if (ctx.getErrorCount() > 0) {
             throw new ParseException(ctx.getErrorDescription());
         }
-        validUselessContext(context, ctx);
-        if(ctx.getErrorCount() > 0) {
+        for(Context c: contexts){
+	        validUselessContext(c, ctx);
+        } if(ctx.getErrorCount() > 0) {
             throw new ParseException(ctx.getErrorDescription());
         }
-        return context;
+        return contexts;
     }
 	
 	public boolean validUselessContext(Context context, ParserContext ctx){

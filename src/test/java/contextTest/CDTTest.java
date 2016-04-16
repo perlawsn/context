@@ -137,7 +137,7 @@ public class CDTTest {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(" "
 		 	+ "CREATE DIMENSION Location "
-		 		+ "CREATE CONCEPT office WHEN contextTest.TestClass.getUserId  = 'abc' "
+		 		+ "CREATE CONCEPT office WHEN getUserId()  = 'ab' "
 		 			+ "CREATE ATTRIBUTE $prova EVALUATED ON \"EVERY ONE SELECT prova:string SAMPLING EVERY 2 d \" "
 		 		+ "CREATE CONCEPT meeting_room WHEN location:string = 'meeting_room' "
 		 			+ "CREATE ATTRIBUTE $prova EVALUATED ON \"EVERY ONE SELECT prova:string SAMPLING EVERY 2 H \" "));

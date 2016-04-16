@@ -93,7 +93,7 @@ public class WhenCondition {
 			compilationErrors = new ParserContext();
 			when = whenAST.compile(DataType.BOOLEAN, compilationErrors, new AttributeOrder());
 			if(compilationErrors.getErrorCount() > 0) {
-	            ctx.addError(ctx.getErrorDescription());
+	            ctx.addError(compilationErrors.getErrorDescription());
 			}
 		}
 		return new WhenCondition(attributes, when, evaluatedOn, s);

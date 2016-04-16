@@ -10,7 +10,8 @@ import org.dei.perla.context.*;
 import org.dei.perla.lang.parser.*;
 import org.dei.perla.lang.parser.ast.*;
 import org.dei.perla.lang.query.expression.*;
-
+import java.util.TreeSet;
+import java.util.Set;
 public final class ContParser implements ContParserConstants {
 
         private String getPosition(Token t) {
@@ -20,11 +21,44 @@ public final class ContParser implements ContParserConstants {
 /*
  * PRODUCTION
  */
+  final public List<Context> CreateContexts(ParserContext ctx) throws ParseException {
+  List<Context> contexts = new ArrayList<Context>();
+  Context c;
+  Set<String> names = new TreeSet<String>();
+    jj_consume_token(KEYWORD_CREATE);
+    jj_consume_token(KEYWORD_CONTEXT);
+    c = CreateContext(ctx);
+        names.add(c.getName());
+        contexts.add(c);
+    label_1:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case KEYWORD_CREATE:
+        ;
+        break;
+      default:
+        jj_la1[0] = jj_gen;
+        break label_1;
+      }
+      jj_consume_token(KEYWORD_CREATE);
+      jj_consume_token(KEYWORD_CONTEXT);
+      c = CreateContext(ctx);
+            String n = c.getName();
+            if (names.contains(n)) {
+                ctx.addError("Duplicate context name '" + n + "'");
+            } else {
+                names.add(n);
+                contexts.add(c);
+            }
+    }
+    jj_consume_token(0);
+      {if (true) return contexts;}
+    throw new Error("Missing return statement in function");
+  }
+
   final public Context CreateContext(ParserContext ctx) throws ParseException {
     String name;
     List<ContextElement> elements = new ArrayList<ContextElement>();
-    jj_consume_token(KEYWORD_CREATE);
-    jj_consume_token(KEYWORD_CONTEXT);
     name = Identifier();
     elements = ActiveIfClause(ctx);
       {if (true) return new Context(name, elements);}
@@ -48,15 +82,15 @@ public final class ContParser implements ContParserConstants {
       throw new ParseException();
     }
         elements.add(c);
-    label_1:
+    label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_AND:
         ;
         break;
       default:
-        jj_la1[0] = jj_gen;
-        break label_1;
+        jj_la1[1] = jj_gen;
+        break label_2;
       }
       jj_consume_token(OPERATOR_AND);
       if (jj_2_3(2)) {
@@ -116,7 +150,7 @@ public final class ContParser implements ContParserConstants {
       {if (true) return Sign.MINUS;}
       break;
     default:
-      jj_la1[1] = jj_gen;
+      jj_la1[2] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -134,7 +168,7 @@ public final class ContParser implements ContParserConstants {
           {if (true) return LogicValue.FALSE;}
       break;
     default:
-      jj_la1[2] = jj_gen;
+      jj_la1[3] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -160,7 +194,7 @@ public final class ContParser implements ContParserConstants {
       {if (true) return Integer.parseInt(value.image.substring(2), 16);}
       break;
     default:
-      jj_la1[3] = jj_gen;
+      jj_la1[4] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -181,7 +215,7 @@ public final class ContParser implements ContParserConstants {
       jj_consume_token(CONSTANT_DOUBLE_QUOTED_STRING_END);
       break;
     default:
-      jj_la1[4] = jj_gen;
+      jj_la1[5] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -212,7 +246,7 @@ public final class ContParser implements ContParserConstants {
           {if (true) return new ConstantAST(token, DataType.FLOAT, value);}
       break;
     default:
-      jj_la1[5] = jj_gen;
+      jj_la1[6] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -246,7 +280,7 @@ public final class ContParser implements ContParserConstants {
       {if (true) return ComparisonOperation.NE;}
       break;
     default:
-      jj_la1[6] = jj_gen;
+      jj_la1[7] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -269,15 +303,15 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = BooleanFactor(type, src, ctx);
-    label_2:
+    label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_OR:
         ;
         break;
       default:
-        jj_la1[7] = jj_gen;
-        break label_2;
+        jj_la1[8] = jj_gen;
+        break label_3;
       }
       t = jj_consume_token(OPERATOR_OR);
       e2 = BooleanFactor(type, src, ctx);
@@ -293,15 +327,15 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = BooleanNegation(type, src, ctx);
-    label_3:
+    label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_XOR:
         ;
         break;
       default:
-        jj_la1[8] = jj_gen;
-        break label_3;
+        jj_la1[9] = jj_gen;
+        break label_4;
       }
       t = jj_consume_token(OPERATOR_XOR);
       e2 = BooleanNegation(type, src, ctx);
@@ -316,15 +350,15 @@ public final class ContParser implements ContParserConstants {
     boolean invert = false;
 
     Token t = null;
-    label_4:
+    label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_NOT:
         ;
         break;
       default:
-        jj_la1[9] = jj_gen;
-        break label_4;
+        jj_la1[10] = jj_gen;
+        break label_5;
       }
       t = jj_consume_token(OPERATOR_NOT);
             invert = !invert;
@@ -355,13 +389,13 @@ public final class ContParser implements ContParserConstants {
         e = Between(e, type, src, ctx);
         break;
       default:
-        jj_la1[10] = jj_gen;
+        jj_la1[11] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[11] = jj_gen;
+      jj_la1[12] = jj_gen;
       ;
     }
       {if (true) return e;}
@@ -380,7 +414,7 @@ public final class ContParser implements ContParserConstants {
           invert = true;
       break;
     default:
-      jj_la1[12] = jj_gen;
+      jj_la1[13] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -401,7 +435,7 @@ public final class ContParser implements ContParserConstants {
           is = new IsNullAST(t, e);
       break;
     default:
-      jj_la1[13] = jj_gen;
+      jj_la1[14] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -458,7 +492,7 @@ public final class ContParser implements ContParserConstants {
             e1 = new ComparisonAST(t, op, e1, e2);
       break;
     default:
-      jj_la1[14] = jj_gen;
+      jj_la1[15] = jj_gen;
       ;
     }
       {if (true) return e1;}
@@ -471,15 +505,15 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = BitwiseTerm(type, src, ctx);
-    label_5:
+    label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_BITWISE_OR:
         ;
         break;
       default:
-        jj_la1[15] = jj_gen;
-        break label_5;
+        jj_la1[16] = jj_gen;
+        break label_6;
       }
       t = jj_consume_token(OPERATOR_BITWISE_OR);
       e2 = BitwiseTerm(type, src, ctx);
@@ -495,15 +529,15 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = BitwiseFactor(type, src, ctx);
-    label_6:
+    label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_BITWISE_AND:
         ;
         break;
       default:
-        jj_la1[16] = jj_gen;
-        break label_6;
+        jj_la1[17] = jj_gen;
+        break label_7;
       }
       t = jj_consume_token(OPERATOR_BITWISE_AND);
       e2 = BitwiseFactor(type, src, ctx);
@@ -519,15 +553,15 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = BitwiseShift(type, src, ctx);
-    label_7:
+    label_8:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_BITWISE_XOR:
         ;
         break;
       default:
-        jj_la1[17] = jj_gen;
-        break label_7;
+        jj_la1[18] = jj_gen;
+        break label_8;
       }
       t = jj_consume_token(OPERATOR_BITWISE_XOR);
       e2 = BitwiseShift(type, src, ctx);
@@ -544,7 +578,7 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = BitwiseNegation(type, src, ctx);
-    label_8:
+    label_9:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_BITWISE_LSH:
@@ -552,8 +586,8 @@ public final class ContParser implements ContParserConstants {
         ;
         break;
       default:
-        jj_la1[18] = jj_gen;
-        break label_8;
+        jj_la1[19] = jj_gen;
+        break label_9;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_BITWISE_LSH:
@@ -565,7 +599,7 @@ public final class ContParser implements ContParserConstants {
               op = BitwiseOperation.RSH;
         break;
       default:
-        jj_la1[19] = jj_gen;
+        jj_la1[20] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -581,15 +615,15 @@ public final class ContParser implements ContParserConstants {
     boolean not = false;
 
     Token t = null;
-    label_9:
+    label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_BITWISE_NOT:
         ;
         break;
       default:
-        jj_la1[20] = jj_gen;
-        break label_9;
+        jj_la1[21] = jj_gen;
+        break label_10;
       }
       t = jj_consume_token(OPERATOR_BITWISE_NOT);
           not = !not;
@@ -609,7 +643,7 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = ArithmeticTerm(type, src, ctx);
-    label_10:
+    label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_PLUS:
@@ -617,8 +651,8 @@ public final class ContParser implements ContParserConstants {
         ;
         break;
       default:
-        jj_la1[21] = jj_gen;
-        break label_10;
+        jj_la1[22] = jj_gen;
+        break label_11;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_PLUS:
@@ -630,7 +664,7 @@ public final class ContParser implements ContParserConstants {
               op = ArithmeticOperation.SUBTRACTION;
         break;
       default:
-        jj_la1[22] = jj_gen;
+        jj_la1[23] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -648,7 +682,7 @@ public final class ContParser implements ContParserConstants {
 
     Token t;
     e1 = ArithmeticFactor(type, src, ctx);
-    label_11:
+    label_12:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_MULTIPLY:
@@ -657,8 +691,8 @@ public final class ContParser implements ContParserConstants {
         ;
         break;
       default:
-        jj_la1[23] = jj_gen;
-        break label_11;
+        jj_la1[24] = jj_gen;
+        break label_12;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case OPERATOR_MULTIPLY:
@@ -674,7 +708,7 @@ public final class ContParser implements ContParserConstants {
               op = ArithmeticOperation.MODULO;
         break;
       default:
-        jj_la1[24] = jj_gen;
+        jj_la1[25] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -697,7 +731,7 @@ public final class ContParser implements ContParserConstants {
           t = token;
       break;
     default:
-      jj_la1[25] = jj_gen;
+      jj_la1[26] = jj_gen;
       ;
     }
     e = PrimaryExpression(type, src, ctx);
@@ -741,7 +775,7 @@ public final class ContParser implements ContParserConstants {
         }
       break;
     default:
-      jj_la1[26] = jj_gen;
+      jj_la1[27] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -761,7 +795,7 @@ public final class ContParser implements ContParserConstants {
       type = Type();
       break;
     default:
-      jj_la1[27] = jj_gen;
+      jj_la1[28] = jj_gen;
       ;
     }
       {if (true) return new AttributeReferenceAST(token, id, type);}
@@ -799,7 +833,7 @@ public final class ContParser implements ContParserConstants {
       {if (true) return DataType.ANY;}
       break;
     default:
-      jj_la1[28] = jj_gen;
+      jj_la1[29] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -853,39 +887,39 @@ public final class ContParser implements ContParserConstants {
   }
 
   private boolean jj_3_2() {
-    if (jj_3R_13()) return true;
+    if (jj_3R_14()) return true;
     return false;
   }
 
   private boolean jj_3_3() {
-    if (jj_3R_12()) return true;
+    if (jj_3R_13()) return true;
     return false;
   }
 
-  private boolean jj_3R_13() {
-    if (jj_3R_14()) return true;
+  private boolean jj_3R_14() {
+    if (jj_3R_15()) return true;
     if (jj_scan_token(KEYWORD_DOT)) return true;
     return false;
   }
 
   private boolean jj_3_4() {
-    if (jj_3R_13()) return true;
+    if (jj_3R_14()) return true;
     return false;
   }
 
-  private boolean jj_3R_12() {
-    if (jj_3R_14()) return true;
+  private boolean jj_3R_13() {
+    if (jj_3R_15()) return true;
     if (jj_scan_token(OPERATOR_EQUAL)) return true;
     return false;
   }
 
-  private boolean jj_3R_14() {
+  private boolean jj_3R_15() {
     if (jj_scan_token(IDENTIFIER)) return true;
     return false;
   }
 
   private boolean jj_3_1() {
-    if (jj_3R_12()) return true;
+    if (jj_3R_13()) return true;
     return false;
   }
 
@@ -900,7 +934,7 @@ public final class ContParser implements ContParserConstants {
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[29];
+  final private int[] jj_la1 = new int[30];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -910,13 +944,13 @@ public final class ContParser implements ContParserConstants {
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x2000000,0x600000,0x0,0x0,0x0,0x0,0x0,0x4000000,0x1000000,0x800000,0x38000,0x38000,0x800000,0x0,0x0,0x0,0x80000000,0x40000000,0x30000000,0x30000000,0x8000000,0x600000,0x600000,0x1c0000,0x1c0000,0x600000,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x100,0x2000000,0x600000,0x0,0x0,0x0,0x0,0x0,0x4000000,0x1000000,0x800000,0x38000,0x38000,0x800000,0x0,0x0,0x0,0x80000000,0x40000000,0x30000000,0x30000000,0x8000000,0x600000,0x600000,0x1c0000,0x1c0000,0x600000,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x0,0x0,0x18000,0xc0000,0x600000,0x7d8000,0x7e,0x0,0x0,0x0,0x0,0x0,0x0,0x3c000,0x7e,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x807d8000,0x0,0x3f80,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x18000,0xc0000,0x600000,0x7d8000,0x7e,0x0,0x0,0x0,0x0,0x0,0x0,0x3c000,0x7e,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x807d8000,0x0,0x3f80,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x4,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x4,0x0,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[4];
   private boolean jj_rescan = false;
@@ -933,7 +967,7 @@ public final class ContParser implements ContParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -948,7 +982,7 @@ public final class ContParser implements ContParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -959,7 +993,7 @@ public final class ContParser implements ContParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -970,7 +1004,7 @@ public final class ContParser implements ContParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -980,7 +1014,7 @@ public final class ContParser implements ContParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -990,7 +1024,7 @@ public final class ContParser implements ContParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 29; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 30; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -1107,7 +1141,7 @@ public final class ContParser implements ContParserConstants {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 29; i++) {
+    for (int i = 0; i < 30; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

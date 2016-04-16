@@ -213,13 +213,31 @@ public class CMSimulator {
 		}
 	}
 	
-	public void createContext(String text) throws org.dei.perla.context.parser.ParseException {
+	public void createContexts(String text) throws org.dei.perla.context.parser.ParseException {
 		if(cdt==null)
 			throw new RuntimeException("Before creating a context it is necessary to create the CDT");
-		Context ctx = ctxParser.create(text);
-		composerMgr.addPossibleContext(ctx);
+		List<Context> ctxs = ctxParser.create(text);
+		for(Context c: ctxs){
+			composerMgr.addPossibleContext(c);
+		}
 	}
 
+	public void createContextsFromFile(String path) throws org.dei.perla.context.parser.ParseException {
+		if(cdt==null)
+			throw new RuntimeException("Before creating a context it is necessary to create the CDT");
+		try (BufferedReader br = new BufferedReader(new FileReader(path)))
+		{
+			String contexts = IOUtils.toString(br);
+			List<Context> ctxs = ctxParser.create(contexts);
+			for(Context c: ctxs){
+				composerMgr.addPossibleContext(c);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Impossible to read the file " + path);
+		} 
+	}
+	
 	private void initCache(CDT cdt){
 		int i = 0;
 		String dimAttName;
@@ -406,6 +424,7 @@ public class CMSimulator {
 		*/
 		public void data(Statement stat, Record record) {
 			Expression when = concept.getWhen().getWhen();
+			
 			LogicValue v = (LogicValue) when.run(record.getValues(), null);
 				synchronized(cache.get(dimension)){
 				Set concepts = cache.get(dimension);

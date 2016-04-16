@@ -3,7 +3,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.*;
 
 import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,10 +35,10 @@ public class ContextElementTest {
 	 Dimension mezzo_trasporto = new Dimension("mezzo_trasporto", "ROOT", concTrasporto);
 	
 	 Dimension compagnia = new Dimension("compagnia", "ROOT", 
-			new CreateAttr("id_compagnia", new FunctionEvaluatedOn("contextTest.TestClass", "getIdCompagnia")));
+			new CreateAttr("id_compagnia", new FunctionEvaluatedOn("getIdCompagnia", null)));
 	
 	 Concept manuale = new Concept("manuale", null, Collections.emptyList(), null, null, Refresh.NEVER, ArrayListMultimap.create());
-	 CreateAttr ca = new CreateAttr("id_apparecchio", new FunctionEvaluatedOn("contextTest.TestClass", "getIdApparecchio"));
+	 CreateAttr ca = new CreateAttr("id_apparecchio", new FunctionEvaluatedOn("getIdApparecchio", null));
 	 Concept elettrico = new Concept("elettrico", null, 
 			Arrays.asList(new CreateAttr[]{ca}), null, null, Refresh.NEVER, ArrayListMultimap.create());
 	 Dimension tipo = new Dimension("tipo", "ROOT", Arrays.asList(new Concept[]{manuale, elettrico}));
@@ -96,6 +99,7 @@ public class ContextElementTest {
         assertThat(ces.getDimension(), equalTo("mezzo_trasporto"));
         assertThat(ces.getValue(), equalTo("aereo"));
         
+
 	}
 
 

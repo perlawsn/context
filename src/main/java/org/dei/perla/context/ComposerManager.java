@@ -240,7 +240,7 @@ public class ComposerManager implements IComposerManager {
 		refreshes = refreshes.stream().
 				filter( r-> r.getType() != RefreshType.NEVER).collect(Collectors.toList());
 		if(refreshes.isEmpty())
-			return Refresh.NEVER;
+			return new Refresh(Duration.ofSeconds(10));
 		Collections.sort(refreshes, new Comparator<Refresh>(){
 		    public int compare(Refresh ra, Refresh rb){
 		        Duration da = ra.getDuration();

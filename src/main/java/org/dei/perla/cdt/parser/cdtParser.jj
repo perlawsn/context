@@ -18,16 +18,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import com.google.common.collect.*;
-import org.dei.perla.cdt.*;
 
+import java.util.TreeSet;
 import org.dei.perla.lang.parser.ast.*;
 
 import org.dei.perla.lang.query.expression.*;
 import org.dei.perla.lang.query.statement.*;
 
-import org.dei.perla.core.fpc.DataType;
-import org.dei.perla.core.fpc.Attribute;
-import org.dei.perla.lang.parser.*;
 import org.dei.perla.context.*;
 
 public final class CDTParser {
@@ -1241,17 +1238,8 @@ MethodAST ReflectionMethod(ParserContext ctx) :
 	String methodName;
 }
 {
-	methodName = PackageName()
+	methodName = Method()
 	{ return MethodAST.create(methodName, ctx); }
-}
-
-String PackageName() :
-{
-    Token value;
-}
-{
-    value = <METHOD_PACKAGE>
-    { return value.image; }
 }
 
 String Method() :

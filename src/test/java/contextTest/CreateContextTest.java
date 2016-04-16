@@ -44,7 +44,7 @@ public class CreateContextTest {
 	public void createContextTest() throws ParseException, org.dei.perla.context.parser.ParseException{
 		String text = "CREATE CONTEXT biglietti_Italo_1 "
 		 		+ "ACTIVE IF mezzo_trasporto = treno AND tipo = manuale";
-		ctxManager.createContext(text);
+		ctxManager.createContexts(text);
 		IComposerManager compose = ctxManager.getComposerManager();
 		Context biglietti_Italo_1 = compose.getPossibleContext("biglietti_Italo_1");
 		ctxManager.startDetectingContext(biglietti_Italo_1);
@@ -56,7 +56,7 @@ public class CreateContextTest {
 	public void createContext() throws org.dei.perla.context.parser.ParseException {
 		String text = "CREATE CONTEXT biglietti_CostaCrociere "
 		 		+ "ACTIVE IF mezzo_trasporto = nave AND tipo = manuale";
-		ctxManager.createContext(text);
+		ctxManager.createContexts(text);
 		IComposerManager compose = ctxManager.getComposerManager();
 		Context biglietti_CostaCrociere = compose.getPossibleContext("biglietti_CostaCrociere");
 		assertTrue(biglietti_CostaCrociere.getName().equals("biglietti_CostaCrociere"));
@@ -69,7 +69,7 @@ public class CreateContextTest {
 	public void removeContext() throws org.dei.perla.context.parser.ParseException{
 		String ctxItalo2 = "CREATE CONTEXT biglietti_Italo_2 "
 		 		+ "ACTIVE IF mezzo_trasporto = nave AND tipo = manuale";
-		ctxManager.createContext(ctxItalo2);
+		ctxManager.createContexts(ctxItalo2);
 		String text = "DROP CONTEXT biglietti_Italo_2";
 		IComposerManager compose = ctxManager.getComposerManager();
 		Context biglietti_Italo_2 = compose.getPossibleContext("biglietti_Italo_2");
@@ -84,14 +84,14 @@ public class CreateContextTest {
 	public void brotherConcepts() throws org.dei.perla.context.parser.ParseException {
 		String text = "CREATE CONTEXT biglietti_CostaCrociere "
 		 		+ "ACTIVE IF mezzo_trasporto = nave AND mezzo_trasporto = aereo";
-		ctxManager.createContext(text);
+		ctxManager.createContexts(text);
 	}
 	
 	@Test(expected= org.dei.perla.context.parser.ParseException.class)
 	public void uselessContraints() throws org.dei.perla.context.parser.ParseException {
 		String text = "CREATE CONTEXT biglietti_CostaCrociere "
 		 		+ "ACTIVE IF mezzo_trasporto = aereo AND tipo = manuale";
-		ctxManager.createContext(text);
+		ctxManager.createContexts(text);
 	}
 	
 	

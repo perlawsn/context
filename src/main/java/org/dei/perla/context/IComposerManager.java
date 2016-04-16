@@ -13,5 +13,7 @@ public interface IComposerManager {
 	public void removePossibleContext(Context toDetect);
 
 	public List<Context> getPossibleContexts();
+	
+	public List<Context> getInvalidContexts();
 
 }

@@ -152,6 +152,21 @@ public class CDT {
 			return true;
 	} 
 	
-	
+	public String toString(){
+		String children = new String();
+		if(dimensions.isEmpty()) {
+			children = "EMPTY";
+		} else {
+			StringBuffer s = new StringBuffer("");
+			for(int i=0; i < dimensions.size() -1; i++){
+				s.append(dimensions.get(i).toString());
+				s.append("\n");
+			}
+			int lastElement = dimensions.size()-1;
+			s.append(dimensions.get(lastElement).toString());
+			children = s.toString();
+		}
+		return children;
+	}
 
 }

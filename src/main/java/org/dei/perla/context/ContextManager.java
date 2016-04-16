@@ -1,5 +1,8 @@
 package org.dei.perla.context;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.IOUtils;
 import org.dei.perla.cdt.CDT;
 import org.dei.perla.cdt.Concept;
 import org.dei.perla.cdt.CreateAttr;
@@ -49,7 +53,7 @@ public class ContextManager {
     private final Executor queryExec;
 
 	//cache for quickly retrieving the current value of a dimension
-	private static Map<String, Object> cache;
+	private static Map<String, Set<Object>> cache;
 	
 	private Map<String, Integer> cdtHandlerUtils;
 	private List<StatementHandler> cdtHandlers;
@@ -62,7 +66,7 @@ public class ContextManager {
 		refreshContext = new ArrayList<ContextDetector>();
 		ctxExecutor = new ContextExecutor(conflictDetector);
 		this.composerMgr = composerMgr;
-		cache = new ConcurrentHashMap<String, Object>();
+		cache = new ConcurrentHashMap<String, Set<Object>>();
 		plugins = Arrays.asList(new SimulatorMapperFactory(), new SimulatorChannelPlugin());
 		system = new PerLaSystem(plugins);
 		queryExec = new Executor(system);
@@ -119,6 +123,18 @@ public class ContextManager {
 		initCache(cdt);
 	}
 	
+	public void createCDTFromFile(String path) throws ParseException{
+		try (BufferedReader br = new BufferedReader(new FileReader(path)))
+		{
+			String cdtText = IOUtils.toString(br);
+			cdt = cdtParser.parseCDT(cdtText);
+			initCache(cdt);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Impossible to read the file " + path);
+		} 
+	}
+	
 	public void addDimension(String text){
 		if(cdt==null)
 			throw new RuntimeException("Before adding a DIMENSION, it is necessary to create the CDT");
@@ -137,7 +153,7 @@ public class ContextManager {
 					index++;
 					for(CreateAttr attr: c.getAttributes()){
 						String dimAttName = concatenateWithDot(dim.getName(), attr.getName());
-						cache.put(dimAttName, new Object());
+						cache.put(dimAttName, new HashSet<>());
 						cdtHandlerUtils.put(dimAttName, index);
 						cdtHandlers.add(new ContextElemAttHandler(dim.getName(), attr.getName()));
 						index++;
@@ -145,7 +161,7 @@ public class ContextManager {
 				}
 			} else {
 				String dimAttName = concatenateWithDot(dim.getName(), dim.getAttribute().getName());
-				cache.put(dimAttName, new Object());
+				cache.put(dimAttName, new HashSet());
 				cdtHandlerUtils.put(dimAttName, index);
 				cdtHandlers.add(new ContextElemAttHandler(dim.getName(),  dim.getAttribute().getName()));
 			}
@@ -179,13 +195,31 @@ public class ContextManager {
 		}
 	}
 	
-	public void createContext(String text) throws org.dei.perla.context.parser.ParseException {
+	public void createContexts(String text) throws org.dei.perla.context.parser.ParseException {
 		if(cdt==null)
 			throw new RuntimeException("Before creating a context it is necessary to create the CDT");
-		Context ctx = ctxParser.create(text);
-		composerMgr.addPossibleContext(ctx);
+		List<Context> ctxs = ctxParser.create(text);
+		for(Context c: ctxs){
+			composerMgr.addPossibleContext(c);
+		}
 	}
 
+	public void createContextsFromFile(String path) throws org.dei.perla.context.parser.ParseException {
+		if(cdt==null)
+			throw new RuntimeException("Before creating a context it is necessary to create the CDT");
+		try (BufferedReader br = new BufferedReader(new FileReader(path)))
+		{
+			String contexts = IOUtils.toString(br);
+			List<Context> ctxs = ctxParser.create(contexts);
+			for(Context c: ctxs){
+				composerMgr.addPossibleContext(c);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Impossible to read the file " + path);
+		} 
+	}
+	
 	private void initCache(CDT cdt){
 		int i = 0;
 		String dimAttName;
@@ -196,7 +230,7 @@ public class ContextManager {
 			if(d.getAttribute() != CreateAttr.EMPTY){
 				CreateAttr att = d.getAttribute();
 				dimAttName = concatenateWithDot(d.getName(), att.getName());
-				cache.put(dimAttName, new Object());
+				cache.put(dimAttName, new HashSet());
 				cdtHandlerUtils.put(dimAttName, i);
 				cdtHandlers.add(new ContextElemAttHandler(d.getName(), att.getName()));
 				i++;
@@ -210,7 +244,7 @@ public class ContextManager {
 					i++;
 					for(CreateAttr attr: c.getAttributes()){
 						dimAttName = concatenateWithDot(d.getName(), attr.getName());
-						cache.put(dimAttName, new Object());
+						cache.put(dimAttName, new HashSet());
 						cdtHandlerUtils.put(dimAttName, i);
 						cdtHandlers.add(new ContextElemAttHandler(d.getName(), attr.getName()));
 						i++;
@@ -306,7 +340,11 @@ public class ContextManager {
 		else if(att.getEvaluatedOn() instanceof FunctionEvaluatedOn) {
 			FunctionEvaluatedOn function = (FunctionEvaluatedOn) att.getEvaluatedOn();
 			String dimAttName = concatenateWithDot(dimension, att.getName());
-			cache.put(dimAttName, function.computeValue());
+			Object value = function.computeValue();
+			synchronized(cache.get(dimAttName)){
+				Set values = cache.get(dimAttName);
+				values.add(value);
+			}
 		}
 		else 
 			throw new RuntimeException("Unexpected EVALUATION CLAUSE of ATTRIBUTE " + att.getName()
@@ -332,7 +370,16 @@ public class ContextManager {
 		public void data(Statement stat, Record record) {
 			Object value = record.getValues()[0];
 			String dimensionAtt = dimension + "." + attribute;
-			cache.put(dimensionAtt, value);
+			synchronized(cache.get(dimensionAtt)){
+				Set values = cache.get(dimensionAtt);
+				values.add(value);
+			}
+		}
+
+		@Override
+		public void complete() {
+			// TODO Auto-generated method stub
+			
 		}
 	}
 	
@@ -359,19 +406,20 @@ public class ContextManager {
 		public void data(Statement stat, Record record) {
 			Expression when = concept.getWhen().getWhen();
 			LogicValue v = (LogicValue) when.run(record.getValues(), null);
-			if(cache.get(dimension) instanceof Set){
-				Set concepts = (Set) cache.get(dimension);
-				synchronized(concepts) {
+			synchronized(cache.get(dimension)){
+				Set concepts = cache.get(dimension);
 				 if (v.toBoolean()) 
 						concepts.add(concept.getName());
 				 else 
 					 concepts.remove(concept.getName());
 				}
-			}else
-				System.out.println("In the cache, dimension " + dimension + 
-						"does not have a set of concepts");
+			}
+
+		@Override
+		public void complete() {
+			// TODO Auto-generated method stub
+			
 		}
-		
 		
 	}
 	

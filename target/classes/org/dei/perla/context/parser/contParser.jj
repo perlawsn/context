@@ -17,7 +17,8 @@ import org.dei.perla.context.*;
 import org.dei.perla.lang.parser.*;
 import org.dei.perla.lang.parser.ast.*;
 import org.dei.perla.lang.query.expression.*;
-
+import java.util.TreeSet;
+import java.util.Set;
 public final class ContParser {
 
         private String getPosition(Token t) {
@@ -82,6 +83,14 @@ TOKEN :
     < KEYWORD_IF:     "IF" >
 }
 
+/*
+ * DROP / CHANGE CONTEXT
+*/
+TOKEN:
+{  < KEYWORD_DROP : "DROP" >
+  |
+  < KEYWORD_ALTER : "ALTER" >
+}
 
 /*
  * MISC TOKENS
@@ -277,14 +286,43 @@ TOKEN :
 /*
  * PRODUCTION
  */
-Context Context(ParserContext ctx):
+
+List<Context> CreateContexts(ParserContext ctx):{
+  List<Context> contexts = new ArrayList<Context>();
+  Context c;
+  Set<String> names = new TreeSet<String>();}
+{
+    < KEYWORD_CREATE >
+    < KEYWORD_CONTEXT >
+    c = CreateContext(ctx)
+    {
+        names.add(c.getName());
+        contexts.add(c);
+    }
+    (
+      < KEYWORD_CREATE >
+    	< KEYWORD_CONTEXT >
+        c = CreateContext(ctx)
+        {
+            String n = c.getName();
+            if (names.contains(n)) {
+                ctx.addError("Duplicate context name '" + n + "'");
+            } else {
+                names.add(n);
+                contexts.add(c);
+            }
+        }
+    )*
+    < EOF >
+    { return contexts; }}
+ 
+Context CreateContext(ParserContext ctx):
 {
     String name;
     List<ContextElement> elements = new ArrayList<ContextElement>();
 }
 {
-    < KEYWORD_CREATE >
-    < KEYWORD_CONTEXT >
+    
     name = Identifier()
     elements = ActiveIfClause(ctx)
     { return new Context(name, elements); }
@@ -491,31 +529,13 @@ ExpressionAST Expression(ExpressionType type, String src, ParserContext ctx) :
     Token t;
 }
 { 
-    e1 = BooleanTerm(type, src, ctx) 
+    e1 = BooleanFactor(type, src, ctx) 
 	
     (
         t = <OPERATOR_OR>
-        e2 = BooleanTerm(type, src, ctx)
+        e2 = BooleanFactor(type, src, ctx)
         { e1 = new BoolAST(t, BoolOperation.OR, e1, e2);
         }
-    )*
-    { return e1; }
-}
-
-ExpressionAST BooleanTerm(ExpressionType type, String src, ParserContext ctx) :
-{
-    ExpressionAST e1;
-    ExpressionAST e2;
-
-    Token t;
-}
-{ 
-    e1 = BooleanFactor(type, src, ctx)
-    
-    (
-        t = <OPERATOR_AND>
-        e2 = BooleanFactor(type, src, ctx)
-        { e1 = new BoolAST(t, BoolOperation.AND, e1, e2); }
     )*
     { return e1; }
 }
@@ -904,5 +924,25 @@ DataType Type() :
     { return DataType.ANY; }
 }
 
+String RemoveContext():
+{
+  String name;
+}
+{
+    < KEYWORD_DROP >
+    < KEYWORD_CONTEXT >
+    name = Identifier()
+    { return name; }
+}
 
+String ChangeContext():
+{
+  String name;
+}
+{
+    < KEYWORD_ALTER >
+    < KEYWORD_CONTEXT >
+    name = Identifier()
+    { return name; }
+}
 

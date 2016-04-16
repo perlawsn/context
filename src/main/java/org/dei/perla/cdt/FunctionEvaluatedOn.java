@@ -1,10 +1,8 @@
 package org.dei.perla.cdt;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import org.dei.perla.context.Utility;
 import org.dei.perla.lang.parser.ParserContext;
+import org.dei.perla.lang.utility.Utility;
+
 
 public class FunctionEvaluatedOn implements EvaluatedOn {
 	
@@ -27,7 +25,7 @@ public class FunctionEvaluatedOn implements EvaluatedOn {
 	
 	
 	public Object computeValue() {
-		Utility u = new Utility();
+		Utility u = Utility.getInstance();
 		Object result = null;
 		if(!u.existsFunction(function)){
 			System.out.println("The function " + function + " does not exists");
@@ -44,7 +42,7 @@ public class FunctionEvaluatedOn implements EvaluatedOn {
 			int len = evaluatedOn.length()-2;
 			evaluatedOn = evaluatedOn.substring(0, len);
 		}
-		Utility u = new Utility();
+		Utility u = Utility.getInstance();
 		if(!u.existsFunction(evaluatedOn)){
 			ctx.addError("The function " + evaluatedOn + " does not exist");
 		}

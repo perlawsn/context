@@ -90,11 +90,13 @@ public class Dimension extends Node{
 			children = "\n" + att.toString();
 		} else {
 			StringBuffer s = new StringBuffer("\n [");
-			for(Concept c: concepts) {
-				s.append(c.getName());
+			for(int i=0; i < concepts.size() - 1; i++){
+				s.append(concepts.get(i).getName());
 				s.append(", ");
 			}
-			s.append("]");
+			int lastElement = concepts.size()-1;
+			s.append(concepts.get(lastElement).getName());
+			s.append(" ]");
 			children = s.toString();
 		}
 		return "DIMENSION " + name + " CHILD OF " + father + children;

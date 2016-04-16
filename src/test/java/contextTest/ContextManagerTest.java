@@ -81,11 +81,11 @@ public class ContextManagerTest {
 			"CREATE CONTEXT ventilationMonitoring " +
 			"ACTIVE IF Location = office AND Env_Temp = cold "); 
 	
-	private ContextManager ctxManager;
+	private CMSimulator ctxManager;
 	
 	@Before
 	public void init() throws ParseException{
-		ctxManager = new ContextManager(new ComposerManager(), new ConflictDetector());
+		ctxManager = new CMSimulator(new ComposerManager(), new ConflictDetector());
 		ctxManager.createCDT(cdt);
 	}
 
@@ -104,7 +104,7 @@ public class ContextManagerTest {
 		assertTrue(handlers.containsKey("Test1.meeting_room"));
 
 		ctxManager.addDimension("ADD DIMENSION Test2 " +
-				"CREATE ATTRIBUTE $attributo AS contextTest.TestClass.getIdCompagnia = 'abc' ");
+				"CREATE ATTRIBUTE $attributo AS getIdCompagnia()");
 		assertTrue(ctxManager.getCache().containsKey("Test2.attributo"));
 		
 		ctxManager.removeDimension("REMOVE DIMENSION Test2");
@@ -115,7 +115,7 @@ public class ContextManagerTest {
 	
 	@Test
 	public void composeBlockTest() throws org.dei.perla.context.parser.ParseException, StatementParseException {
-		ctxManager.createContext(normalString);
+		ctxManager.createContexts(normalString);
 		CDT cdt = ctxManager.getCDT();
 		assertThat(cdt.getDimensions().size(), equalTo(4));
 		Context normal = ctxManager.getComposerManager().getPossibleContext("normal");
@@ -155,14 +155,20 @@ public class ContextManagerTest {
 		Map<String, Integer> handlers = ctxManager.getHandlers();
 		assertTrue(handlers.containsKey("Location.office"));
 		assertTrue(handlers.containsKey("Location.meeting_room"));
+		
+		//aggiungo dei valori in cache
+		//ctxManager.addConceptToCache("Location", "Pista1");
 	}
 	
 	@Test
 	public void detectContext() throws org.dei.perla.context.parser.ParseException {
-		ctxManager.createContext(ventilationMonitoringString);
+		ctxManager.createContexts(ventilationMonitoringString);
 		Context ventilationMonitoring = ctxManager.getComposerManager().getPossibleContext("ventilationMonitoring");
 		ctxManager.startDetectingContext(ventilationMonitoring);
-
 	}
 	
+	@Test 
+	public void livigno(){
+		
+	}
 }

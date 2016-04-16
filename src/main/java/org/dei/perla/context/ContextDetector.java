@@ -31,9 +31,9 @@ public class ContextDetector {
     private static final int RUNNING = 1;
     
     private int status;
-	private Map<String, Object> cache;
+	private Map<String, Set<Object>> cache;
 	
-	public ContextDetector(Context context, Map<String, Object> cache){
+	public ContextDetector(Context context, Map<String, Set<Object>> cache){
 		this.context = context;
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		status = STOPPED;
@@ -105,8 +105,10 @@ public class ContextDetector {
  	            	break;
  	            }
 			}
-        	if((context.isActive() && !isActive) || (!context.isActive() && isActive))
+        	if((context.isActive() && !isActive) || (!context.isActive() && isActive)){
+        		System.out.println("Context " + context.getName() + " is active " + isActive);
         		context.setActive(isActive);
+        	}
         	}
         }
         

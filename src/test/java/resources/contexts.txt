@@ -1,0 +1,2 @@
+CREATE CONTEXT Prova
+ ACTIVE IF WeatherCondition = Snow

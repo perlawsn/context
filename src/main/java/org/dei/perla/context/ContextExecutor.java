@@ -147,14 +147,15 @@ public class ContextExecutor implements Observer{
 			// TODO	
 		}
 
-		
-		public void complete(Statement s) {
+	
+		public void error(Statement s, Throwable cause) {
 			// TODO Auto-generated method stub
 			
 		}
 
-		
-		public void error(Statement s, Throwable cause) {
+
+		@Override
+		public void complete() {
 			// TODO Auto-generated method stub
 			
 		}

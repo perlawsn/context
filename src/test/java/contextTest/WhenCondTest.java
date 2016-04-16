@@ -10,10 +10,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.dei.perla.cdt.CDT;
 import org.dei.perla.cdt.Concept;
 import org.dei.perla.cdt.WhenCondition;
 import org.dei.perla.cdt.parser.CDTParser;
 import org.dei.perla.cdt.parser.ParseException;
+import org.dei.perla.context.ComposerManager;
+import org.dei.perla.context.ConflictDetector;
+import org.dei.perla.context.ContextDetector;
 import org.dei.perla.core.fpc.Attribute;
 import org.dei.perla.core.fpc.DataType;
 import org.dei.perla.lang.parser.AttributeOrder;
@@ -21,6 +25,7 @@ import org.dei.perla.lang.parser.FieldSelection;
 import org.dei.perla.lang.parser.ParserContext;
 import org.dei.perla.lang.parser.ast.*;
 import org.dei.perla.lang.query.expression.AttributeReference;
+import org.dei.perla.lang.query.expression.Bool;
 import org.dei.perla.lang.query.expression.Comparison;
 import org.dei.perla.lang.query.expression.Constant;
 import org.dei.perla.lang.query.expression.Expression;
@@ -29,12 +34,12 @@ import org.junit.Test;
 
 
 public class WhenCondTest {
-
+	
 	@Test
 	public void evaluatedWhenTest() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN contextTest.TestClass.getUserId = 'bc' "
+				 		+ " CREATE CONCEPT Hot WHEN getIdCompagnia() = 'ab' "
 				 		+ " EVALUATED ON 'EVERY 1 m SELECT AVG(temp:integer, 1 m)" 
 				 		+ " SAMPLING EVERY 5 s "
 				 		+ " EXECUTE IF EXISTS(temp)'"));
@@ -62,9 +67,10 @@ public class WhenCondTest {
 	public void defaultEvaluatedTest() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35 AND pressure:float > 0.35'"));
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35 AND pressure:float > 0.35"));
 		  Concept c = parser.CreateConcept(ctx, null);
 		  WhenCondition w = c.getWhen();
+		  assertTrue(w.getWhen() instanceof Bool);
 		  assertFalse(ctx.hasErrors());
 		  System.out.println(ctx.getAttributes());
 	}

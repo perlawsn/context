@@ -38,16 +38,15 @@ public class CreateAttrTest {
 	public void createAttrWithFunction() throws ParseException, org.dei.perla.lang.parser.ParseException {
 		ParserContext ctx = new ParserContext();
 		CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Casa CREATE ATTRIBUTE $temperature AS contextTest.TestClass.getUserId "));
+				 		+ " CREATE CONCEPT Casa CREATE ATTRIBUTE $temperature AS getUserId() "));
 		Concept c = parser.CreateConcept(ctx, new HashSet<String>());
 		CreateAttr tempAtt = c.getAttributes().get(0);
 		EvaluatedOn q = tempAtt.getEvaluatedOn();
 		boolean b = (q instanceof FunctionEvaluatedOn);
 		assertTrue(b);
 		FunctionEvaluatedOn f = (FunctionEvaluatedOn) q;
-		assertTrue(f.getClassName().equals("contextTest.TestClass"));
-		assertTrue(f.getMethodName().equals("getUserId"));
-		assertTrue(f.computeValue().equals("abcd12"));
+		assertTrue(f.getStringEvaluatedOn().equals("getUserId"));
+		assertTrue(f.computeValue().equals("ab"));
 	}
 		
 			
