@@ -21,153 +21,157 @@ public interface CDTParserConstants {
   /** RegularExpression Id. */
   int KEYWORD_WHEN = 12;
   /** RegularExpression Id. */
-  int KEYWORD_CHILD = 13;
+  int EXCLUDES = 13;
   /** RegularExpression Id. */
-  int KEYWORD_OF = 14;
+  int KEYWORD_CHILD = 14;
   /** RegularExpression Id. */
-  int KEYWORD_ADD = 15;
+  int KEYWORD_OF = 15;
   /** RegularExpression Id. */
-  int KEYWORD_ATTRIBUTE = 16;
+  int KEYWORD_ADD = 16;
   /** RegularExpression Id. */
-  int KEYWORD_DOLLAR = 17;
+  int KEYWORD_ATTRIBUTE = 17;
   /** RegularExpression Id. */
-  int KEYWORD_EVALUATED = 18;
+  int KEYWORD_DOLLAR = 18;
   /** RegularExpression Id. */
-  int KEYWORD_ON = 19;
+  int KEYWORD_EVALUATED = 19;
   /** RegularExpression Id. */
-  int KEYWORD_WITH = 20;
+  int KEYWORD_ON = 20;
   /** RegularExpression Id. */
-  int KEYWORD_ENABLE = 21;
+  int KEYWORD_WITH = 21;
   /** RegularExpression Id. */
-  int KEYWORD_DISABLE = 22;
+  int KEYWORD_ENABLE = 22;
   /** RegularExpression Id. */
-  int KEYWORD_COMPONENT = 23;
+  int KEYWORD_DISABLE = 23;
   /** RegularExpression Id. */
-  int KEYWORD_REFRESH = 24;
+  int KEYWORD_COMPONENT = 24;
   /** RegularExpression Id. */
-  int KEYWORD_COLON = 25;
+  int KEYWORD_REFRESH = 25;
   /** RegularExpression Id. */
-  int KEYWORD_IS = 26;
+  int KEYWORD_COLON = 26;
   /** RegularExpression Id. */
-  int KEYWORD_BETWEEN = 27;
+  int KEYWORD_IS = 27;
   /** RegularExpression Id. */
-  int KEYWORD_LIKE = 28;
+  int KEYWORD_BETWEEN = 28;
   /** RegularExpression Id. */
-  int OPERATOR_MULTIPLY = 29;
+  int KEYWORD_LIKE = 29;
   /** RegularExpression Id. */
-  int OPERATOR_DIVIDE = 30;
+  int OPERATOR_MULTIPLY = 30;
   /** RegularExpression Id. */
-  int OPERATOR_MODULO = 31;
+  int OPERATOR_DIVIDE = 31;
   /** RegularExpression Id. */
-  int OPERATOR_PLUS = 32;
+  int OPERATOR_MODULO = 32;
   /** RegularExpression Id. */
-  int OPERATOR_MINUS = 33;
+  int OPERATOR_PLUS = 33;
   /** RegularExpression Id. */
-  int OPERATOR_NOT = 34;
+  int OPERATOR_MINUS = 34;
   /** RegularExpression Id. */
-  int OPERATOR_XOR = 35;
+  int OPERATOR_NOT = 35;
   /** RegularExpression Id. */
-  int OPERATOR_AND = 36;
+  int OPERATOR_XOR = 36;
   /** RegularExpression Id. */
-  int OPERATOR_OR = 37;
+  int OPERATOR_AND = 37;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_NOT = 38;
+  int OPERATOR_OR = 38;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_LSH = 39;
+  int OPERATOR_BITWISE_NOT = 39;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_RSH = 40;
+  int OPERATOR_BITWISE_LSH = 40;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_XOR = 41;
+  int OPERATOR_BITWISE_RSH = 41;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_AND = 42;
+  int OPERATOR_BITWISE_XOR = 42;
   /** RegularExpression Id. */
-  int OPERATOR_BITWISE_OR = 43;
+  int OPERATOR_BITWISE_AND = 43;
   /** RegularExpression Id. */
-  int OPERATOR_GREATER = 44;
+  int OPERATOR_BITWISE_OR = 44;
   /** RegularExpression Id. */
-  int OPERATOR_LESS = 45;
+  int OPERATOR_GREATER = 45;
   /** RegularExpression Id. */
-  int OPERATOR_GREATER_EQUAL = 46;
+  int OPERATOR_LESS = 46;
   /** RegularExpression Id. */
-  int OPERATOR_LESS_EQUAL = 47;
+  int OPERATOR_GREATER_EQUAL = 47;
   /** RegularExpression Id. */
-  int OPERATOR_EQUAL = 48;
+  int OPERATOR_LESS_EQUAL = 48;
   /** RegularExpression Id. */
-  int OPERATOR_NOT_EQUAL = 49;
+  int OPERATOR_EQUAL = 49;
   /** RegularExpression Id. */
-  int FUNCTION_COUNT = 50;
+  int OPERATOR_NOT_EQUAL = 50;
   /** RegularExpression Id. */
-  int FUNCTION_AVG = 51;
+  int FUNCTION_COUNT = 51;
   /** RegularExpression Id. */
-  int FUNCTION_MAX = 52;
+  int FUNCTION_AVG = 52;
   /** RegularExpression Id. */
-  int FUNCTION_MIN = 53;
+  int FUNCTION_MAX = 53;
   /** RegularExpression Id. */
-  int FUNCTION_SUM = 54;
+  int FUNCTION_MIN = 54;
   /** RegularExpression Id. */
-  int TIMEUNIT_S = 55;
+  int FUNCTION_SUM = 55;
   /** RegularExpression Id. */
-  int TIMEUNIT_M = 56;
+  int TIMEUNIT_S = 56;
   /** RegularExpression Id. */
-  int TIMEUNIT_H = 57;
+  int TIMEUNIT_M = 57;
   /** RegularExpression Id. */
-  int TIMEUNIT_MS = 58;
+  int TIMEUNIT_H = 58;
   /** RegularExpression Id. */
-  int TIMEUNIT_D = 59;
+  int TIMEUNIT_MS = 59;
   /** RegularExpression Id. */
-  int TYPE_ID = 60;
+  int TIMEUNIT_D = 60;
   /** RegularExpression Id. */
-  int TYPE_TIMESTAMP = 61;
+  int TYPE_ID = 61;
   /** RegularExpression Id. */
-  int TYPE_BOOLEAN = 62;
+  int TYPE_TIMESTAMP = 62;
   /** RegularExpression Id. */
-  int TYPE_INTEGER = 63;
+  int TYPE_BOOLEAN = 63;
   /** RegularExpression Id. */
-  int TYPE_FLOAT = 64;
+  int TYPE_INTEGER = 64;
   /** RegularExpression Id. */
-  int TYPE_STRING = 65;
+  int TYPE_FLOAT = 65;
   /** RegularExpression Id. */
-  int TYPE_ANY = 66;
+  int TYPE_STRING = 66;
   /** RegularExpression Id. */
-  int KEYWORD_AS = 67;
+  int TYPE_ANY = 67;
   /** RegularExpression Id. */
-  int CONSTANT_NULL = 68;
+  int KEYWORD_AS = 68;
   /** RegularExpression Id. */
-  int CONSTANT_BOOLEAN_TRUE = 69;
+  int CONSTANT_NULL = 69;
   /** RegularExpression Id. */
-  int CONSTANT_BOOLEAN_FALSE = 70;
+  int CONSTANT_BOOLEAN_TRUE = 70;
   /** RegularExpression Id. */
-  int CONSTANT_BOOLEAN_UNKNOWN = 71;
+  int CONSTANT_BOOLEAN_FALSE = 71;
   /** RegularExpression Id. */
-  int CONSTANT_INTEGER_10 = 72;
+  int CONSTANT_BOOLEAN_UNKNOWN = 72;
   /** RegularExpression Id. */
-  int CONSTANT_INTEGER_16 = 73;
+  int CONSTANT_INTEGER_10 = 73;
   /** RegularExpression Id. */
-  int CONSTANT_FLOAT = 74;
+  int CONSTANT_INTEGER_16 = 74;
   /** RegularExpression Id. */
-  int CONSTANT_SINGLE_QUOTED_STRING_START = 75;
+  int CONSTANT_FLOAT = 75;
   /** RegularExpression Id. */
-  int CONSTANT_DOUBLE_QUOTED_STRING_START = 76;
+  int CONSTANT_SINGLE_QUOTED_STRING_START = 76;
   /** RegularExpression Id. */
-  int CONSTANT_SINGLE_QUOTED_STRING_VALUE = 77;
+  int CONSTANT_DOUBLE_QUOTED_STRING_START = 77;
   /** RegularExpression Id. */
-  int CONSTANT_DOUBLE_QUOTED_STRING_VALUE = 78;
+  int CONSTANT_SINGLE_QUOTED_STRING_VALUE = 78;
   /** RegularExpression Id. */
-  int CONSTANT_SINGLE_QUOTED_STRING_END = 79;
+  int CONSTANT_DOUBLE_QUOTED_STRING_VALUE = 79;
   /** RegularExpression Id. */
-  int CONSTANT_DOUBLE_QUOTED_STRING_END = 80;
+  int CONSTANT_SINGLE_QUOTED_STRING_END = 80;
   /** RegularExpression Id. */
-  int DIGIT = 81;
+  int CONSTANT_DOUBLE_QUOTED_STRING_END = 81;
   /** RegularExpression Id. */
-  int LITERAL = 82;
+  int DIGIT = 82;
   /** RegularExpression Id. */
-  int UNDERSCORE = 83;
+  int LITERAL = 83;
   /** RegularExpression Id. */
-  int HEXADECIMAL = 84;
+  int UNDERSCORE = 84;
   /** RegularExpression Id. */
-  int IDENTIFIER = 85;
+  int HEXADECIMAL = 85;
   /** RegularExpression Id. */
-  int METHOD = 86;
+  int IDENTIFIER = 86;
+  /** RegularExpression Id. */
+  int METHOD = 87;
+  /** RegularExpression Id. */
+  int METHOD_PACKAGE = 88;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -197,6 +201,7 @@ public interface CDTParserConstants {
     "\"REMOVE\"",
     "\"CONCEPT\"",
     "\"WHEN\"",
+    "\"EXCLUDES\"",
     "\"CHILD\"",
     "\"OF\"",
     "\"ADD\"",
@@ -271,6 +276,8 @@ public interface CDTParserConstants {
     "<HEXADECIMAL>",
     "<IDENTIFIER>",
     "<METHOD>",
+    "<METHOD_PACKAGE>",
+    "\".\"",
     "\"(\"",
     "\")\"",
   };

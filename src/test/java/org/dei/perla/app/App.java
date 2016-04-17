@@ -33,6 +33,11 @@ public class App
 	private static final String descPath3 ="fpc_descriptor2.xml";
 	private static final String descPath4 ="example.xml";
 	private static final String descPath5 ="slope_sensor.xml";
+	private static final String descPath6 ="slope_sensor3.xml";
+	private static final String SLOPE_1_SENSOR ="src/test/java/resources/slope_sensor.xml";
+	private static final String SLOPE_2_SENSOR ="src/test/java/resources/slope_sensor2.xml";
+	private static final String SLOPE_3_SENSOR ="src/test/java/resources/slope_sensor3.xml";
+	private static final String WEATHER_SENSOR ="src/test/java/resources/weather_livigno.xml";
     private static final List<Plugin> plugins;
     static {
         List<Plugin> ps = new ArrayList<>();
@@ -92,7 +97,8 @@ public class App
     //    }
      try {
 
-			system.injectDescriptor(new FileInputStream(descPath5));
+			system.injectDescriptor(new FileInputStream(SLOPE_1_SENSOR));
+			system.injectDescriptor(new FileInputStream(SLOPE_3_SENSOR));
 
 		//	system.injectDescriptor(new FileInputStream(descPath));
 			//system.injectDescriptor(new FileInputStream(descPath1));
@@ -111,6 +117,16 @@ public class App
         	for(Attribute a: f.getAttributes())
         		System.out.println("id: "+a.getId()+" type:"+a.getType()+"\n");
         }
+        qm.addQuery("EVERY ONE SELECT avg(temperature:float, 5 SAMPLES ), avg(snow_density:float, 5 SAMPLES)"+
+        		 " SAMPLING EVERY 1 SECONDS "+
+        		" EXECUTE IF position = 'pista1' ");
+        qm.addQuery("EVERY ONE SELECT avg(temperature:float,5 SAMPLES), avg(snow_density:float,5 SAMPLES)"+
+        		" SAMPLING EVERY 1 SECONDS "+ 
+        		" EXECUTE IF position = 'pista1' ");
+        qm.addQuery(" EVERY ONE SELECT avg(temperature:float,5 SAMPLES), avg(snow_density:float,5 SAMPLES)"+
+        			" SAMPLING EVERY 1  SECONDS"+ 
+        			" EXECUTE IF position = 'pista1' ");
+
         /*     qm.addQuery("every one " +
                 "select temp_c:float " +
                 "sampling every 500 milliseconds " +

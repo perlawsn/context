@@ -6,10 +6,10 @@
 
 	<attributes>
 		<attribute id="temperature" type="float" permission="read-only"/>
-		<attribute id="fog" type="float" permission="read-only"/>
-		<attribute id="brigthness" type="float" permission="read-only"/>
 		<attribute id="snow_depth" type="float" permission="read-only"/>
 		<attribute id="snow_density" type="float" permission="read-only"/>
+		<attribute id="fog" type="float" permission="read-only"/>
+		<attribute id="brigthness" type="float" permission="read-only"/>
 		<attribute id="position" type="string" access="static" value="pista2"/>
 		<attribute id="period" type="integer" permission="write-only"/>
 	</attributes>
@@ -37,8 +37,6 @@
 			<sim:generator id="enviroment_condition">
 				<sim:field name="temperature" strategy="dynamic"
           			type="float" min="-20" max="20"/>
-				<sim:field name="fog" strategy="dynamic"
-          			type="float" min="0" max="1"/>
 			</sim:generator>
 		</sim:channel>
 	</channels>
