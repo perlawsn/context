@@ -53,10 +53,20 @@ public class WhenCondTest {
 	}
 	
 	@Test
+	public void between() throws ParseException {
+		 ParserContext ctx = new ParserContext();
+		 CDTParser parser = new CDTParser(new StringReader(""
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer BETWEEN 12 AND 14"));
+		  Concept c = parser.CreateConcept(ctx, null);
+		  WhenCondition w = c.getWhen();
+		  System.out.println(w.getAttributes());
+	}
+	
+	@Test
 	public void invalidEvaluatedTest() throws ParseException {
 		 ParserContext ctx = new ParserContext();
 		 CDTParser parser = new CDTParser(new StringReader(""
-				 		+ " CREATE CONCEPT Hot WHEN temperature:integer > 35"
+				 		+ " CREATE CONCEPT Hot WHEN temperature:integer BETWEEN 12 AND 14"
 				 		+ " EVALUATED ON 'SET alarm = true ON 21'"));
 		  Concept c = parser.CreateConcept(ctx, null);
 		  WhenCondition w = c.getWhen();
@@ -72,7 +82,6 @@ public class WhenCondTest {
 		  WhenCondition w = c.getWhen();
 		  assertTrue(w.getWhen() instanceof Bool);
 		  assertFalse(ctx.hasErrors());
-		  System.out.println(ctx.getAttributes());
 	}
  //da finire
 //	@Test

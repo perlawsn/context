@@ -87,7 +87,8 @@ public class CreateContextTest {
 	@Test
 	public void removeContext() throws org.dei.perla.context.parser.ParseException{
 		String ctxItalo2 = "CREATE CONTEXT biglietti_Italo_2 "
-		 		+ "ACTIVE IF mezzo_trasporto = nave AND tipo = manuale";
+		 		+ "ACTIVE IF mezzo_trasporto = nave AND tipo = manuale CREATE CONTEXT prova ACTIVE IF "
+		 		+ "mezzo_trasporto = nave ";
 		ctxManager.createContexts(ctxItalo2);
 		String text = "DROP CONTEXT biglietti_Italo_2";
 		IComposerManager compose = ctxManager.getComposerManager();

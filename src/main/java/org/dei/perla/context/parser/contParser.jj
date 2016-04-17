@@ -300,8 +300,7 @@ List<Context> CreateContexts(ParserContext ctx):{
         contexts.add(c);
     }
     (
-      < KEYWORD_CREATE >
-    	< KEYWORD_CONTEXT >
+     < KEYWORD_CREATE > < KEYWORD_CONTEXT >
         c = CreateContext(ctx)
         {
             String n = c.getName();
@@ -315,14 +314,13 @@ List<Context> CreateContexts(ParserContext ctx):{
     )*
     < EOF >
     { return contexts; }}
- 
+
 Context CreateContext(ParserContext ctx):
 {
     String name;
     List<ContextElement> elements = new ArrayList<ContextElement>();
 }
 {
-    
     name = Identifier()
     elements = ActiveIfClause(ctx)
     { return new Context(name, elements); }
@@ -360,7 +358,6 @@ List<ContextElement> ActiveIfClause(ParserContext ctx) :
       	)
         { elements.add(c); }
     )*
-    < EOF >
     { return elements; }
 }
 

@@ -422,13 +422,23 @@ public class CMSimulator {
 		public void data(Statement stat, Record record) {
 			Expression when = concept.getWhen().getWhen();
 			LogicValue v = (LogicValue) when.run(record.getValues(), null);
-			System.out.println("sono dentro data di " + dimension + "." + concept + " logicValue " + v);
+			StringBuffer values = new StringBuffer();
+			int i = 0;
+			for(Object o : record.getValues()){
+				values.append(record.getFields().get(i).getId() + ": " + o.toString() + ", ");
+				i++;
+			}
+			System.out.println("Concept " + concept.getName() + when + " Record " + values.toString() + " logicValue " + v);
 				synchronized(cache.get(dimension)){
 				Set concepts = cache.get(dimension);
-				 if (v.toBoolean()) 
-						concepts.add(concept.getName());
-				 else 
-					 concepts.remove(concept.getName());
+				 if (v.toBoolean()) { 
+					 if(concepts.add(concept.getName()))
+						 System.out.println("Aggiunto Concept " + concept.getName() + " a " + dimension );
+				 }
+				 else {
+					 if(concepts.remove(concept.getName()))
+						 System.out.println("Rimosso Concept " + concept.getName() + " da " + dimension );
+				 }
 			}
 		}
 

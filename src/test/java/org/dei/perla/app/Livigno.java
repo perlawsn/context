@@ -68,7 +68,9 @@ public class Livigno {
 			System.out.println(ctxManager.getCDT());
 			
 			ctxManager.createContextsFromFile(CONTEXTS);
-			ctxManager.startDetectingContext("Prova");
+			ctxManager.startDetectingContext("IcySlope1");
+			ctxManager.startDetectingContext("LittleVisibility");
+			ctxManager.startDetectingContext("Autumn");
 			ctxManager.populateCDT();
 	    } catch (ParseException | org.dei.perla.context.parser.ParseException e) {
 			e.printStackTrace();
@@ -78,17 +80,11 @@ public class Livigno {
     private static void initSystem(){
     	system= new PerLaSystem(plugins);
         qm = new QueryMenager(system);
-        Map<Attribute, Object> values = createDefaultValues();
-        int i;
-
-        Random r;
-        int v;
-        r = new Random();
     	
        try {
 			system.injectDescriptor(new FileInputStream(SLOPE_1_SENSOR));
-//			system.injectDescriptor(new FileInputStream(SLOPE_2_SENSOR)); 
-//			system.injectDescriptor(new FileInputStream(WEATHER_SENSOR)); 
+			system.injectDescriptor(new FileInputStream(SLOPE_2_SENSOR)); 
+			system.injectDescriptor(new FileInputStream(WEATHER_SENSOR)); 
 		} catch (FileNotFoundException | FpcCreationException e) {
 			e.printStackTrace();
 		}

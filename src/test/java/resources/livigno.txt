@@ -84,10 +84,10 @@ CREATE CONCEPT Fog WHEN fog:float > 0.5
   SAMPLING EVERY 1s
   EXECUTE REQUIRE fog:float'
 
- CREATE CONCEPT Sunny WHEN brigthness:float > 0.5
- EVALUATED ON 'EVERY ONE SELECT avg(brightness:float, 5s)
+ CREATE CONCEPT Sunny WHEN luminoso:float > 0.5
+ EVALUATED ON 'EVERY ONE SELECT avg(luminoso:float, 5s)
   SAMPLING EVERY 1 s
-  EXECUTE REQUIRE brigthness:float'
+  EXECUTE REQUIRE luminoso:float'
 
 CREATE DIMENSION Season
  CREATE CONCEPT Autumn WHEN getMonth() BETWEEN 8 AND 11

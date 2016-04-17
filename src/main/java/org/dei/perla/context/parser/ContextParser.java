@@ -21,7 +21,9 @@ public class ContextParser {
         try {
             contexts = p.CreateContexts(ctx);
         } catch(ParseException e) {
-            throw new ParseException("Syntax error: " + ctx.getErrorDescription());
+        	System.out.println(e.getMessage());
+        	throw new ParseException("Syntax error: " + ctx.getErrorDescription());
+            
         }
         if (ctx.getErrorCount() > 0) {
             throw new ParseException(ctx.getErrorDescription());

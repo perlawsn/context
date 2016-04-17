@@ -1,2 +1,6 @@
-CREATE CONTEXT Prova
+CREATE CONTEXT IcySlope1
  ACTIVE IF SnowCondition = Icy1
+CREATE CONTEXT Autumn
+ ACTIVE IF Season = Autumn
+CREATE CONTEXT LittleVisibility
+ ACTIVE IF WeatherCondition = Fog AND Visibility = Limited

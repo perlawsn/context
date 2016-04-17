@@ -9,7 +9,7 @@
 		<attribute id="snow_depth" type="float" permission="read-only"/>
 		<attribute id="snow_density" type="float" permission="read-only"/>
 		<attribute id="fog" type="float" permission="read-only"/>
-		<attribute id="brigthness" type="float" permission="read-only"/>
+		<attribute id="luminoso" type="float" permission="read-only"/>
 		<attribute id="position" type="string" access="static" value="pista2"/>
 		<attribute id="period" type="integer" permission="write-only"/>
 	</attributes>
@@ -25,7 +25,7 @@
           			type="float" min="50" max="900"/>
 				<sim:field name="fog" strategy="dynamic"
           			type="float" min="0" max="1"/>
-				<sim:field name="brigthness" strategy="dynamic"
+				<sim:field name="luminoso" strategy="dynamic"
           			type="float" min="0" max="1"/>
 			</sim:generator>
 			<sim:generator id="snow_condition">
@@ -47,7 +47,7 @@
 			<sim:field name="snow_depth" type="float"/>
 			<sim:field name="snow_density" type="float"/>
 			<sim:field name="fog" type="float"/>
-			<sim:field name="brightness" type="float"/>
+			<sim:field name="luminoso" type="float"/>
 			<sim:field name="position" type="string"/>
 		</sim:message>
 		<sim:message id="position-msg">
@@ -93,7 +93,7 @@
 				<i:put expression="${result.snow_depth}" attribute="snow_depth" />
 				<i:put expression="${result.snow_density}" attribute="snow_density" />
 				<i:put expression="${result.fog}" attribute="fog" />
-				<i:put expression="${result.brigthness}" attribute="brigthness" />
+				<i:put expression="${result.luminoso}" attribute="luminoso" />
 				<i:put expression="${result.position}" attribute="position" />
 				<i:emit />
 			</on>
